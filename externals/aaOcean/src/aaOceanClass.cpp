@@ -30,7 +30,9 @@
 #include "agnerFog/stoc1.cpp"
 #include "agnerFog/userintf.cpp"
 #include "aaOceanClass.h"
-#include "vectorSSE.h"
+
+// removed because of gcc-4 dependency
+// #include "vectorSSE.h"
 
 aaOcean::aaOcean() :
 	// input variables
@@ -66,7 +68,6 @@ aaOcean::aaOcean() :
 
 	// bools to check ocean state
 	m_isAllocated(0),
-	m_isValid(0),
 	m_isFoamAllocated(0),
 	m_isNormalAllocated(0),
 	m_doHoK(0),
@@ -113,11 +114,6 @@ aaOcean::aaOcean(const aaOcean &cpy)
 aaOcean::~aaOcean()
 {
 	clearArrays();
-}
-
-bool aaOcean::isValid()
-{
-	return m_isValid;
 }
 
 bool aaOcean::isChoppy()
@@ -697,6 +693,8 @@ void aaOcean::evaluateJacobians()
 	}
 }
 
+// removed until vector class is gcc-4.2.x compliant
+/*
 void aaOcean::evaluateNormal()
 {
 	int index;
@@ -807,6 +805,7 @@ void aaOcean::evaluateNormal()
 		}
 	}
 }
+*/
 
 void aaOcean::getFoamBounds(float& outBoundsMin, float& outBoundsMax)
 {
