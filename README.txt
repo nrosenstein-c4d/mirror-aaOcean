@@ -6,6 +6,9 @@ aaOcean is free software and can be redistributed and modified under the terms o
 GNU General Public License (Version 3) as provided by the Free Software Foundation.
 GNU General Public License http://www.gnu.org/licenses/gpl.html
 
+Documentation:
+https://bitbucket.org/amaanakram/aaocean/wiki/browse/
+
 **FEATURES**
 * Multi-threaded via OpenMP
 * FFT spectrum sampling ensures that the resulting ocean shape is only enhanced by increasing ocean resolution, 
@@ -21,6 +24,7 @@ This repository contains the following
 * aaOcean Mental Ray shaders
 * Softimage Shader Definitions for Mental Ray shaders
 * aaOcean Arnold shaders
+* aaOcean Prman 19 RIS displacement shader
 * aaOcean Softimage ICE deformer
 * aaOcean Maya Deformer
 * aaOcean Houdini SOP
@@ -29,8 +33,7 @@ This repository contains the following
 
 *****LINUX BUILD INSTRUCTIONS*******
 Please see the wiki page at 
-
-[Linux Build Instructions](https://bitbucket.org/amaanakram/aaocean/wiki/Home)
+https://bitbucket.org/amaanakram/aaocean/wiki/Build%20instructions
 
 MAYA & LINUX:
 To compile the Maya plugin, you will need gcc-4.2.4 which is ABI-compatible with gcc-4.1.x and
