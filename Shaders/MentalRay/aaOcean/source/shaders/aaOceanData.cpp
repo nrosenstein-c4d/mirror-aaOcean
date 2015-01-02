@@ -1,10 +1,17 @@
-// aaOcean Mental Ray Main Shader
-// Outputs RGBA, with Vector Displacement in RGB, and foam in Alpha
+// aaOcean
 // Author: Amaan Akram 
 // www.amaanakram.com
+// Outputs RGBA, with Vector Displacement in RGB, and foam in Alpha
+//
+// LICENSE: 
 // aaOcean is free software and can be redistributed and modified under the terms of the 
 // GNU General Public License (Version 3) as provided by the Free Software Foundation.
 // GNU General Public License http://www.gnu.org/licenses/gpl.html
+//
+// A "New BSD" License for aaOcean can be obtained by contacting the author
+// For more details on aaOcean and associated 3rd Party licenses, please see
+// license.txt file that is part of the aaOcean repository:
+// https://bitbucket.org/amaanakram/aaocean
 
 #ifndef aaOceanDataShader_CPP
 #define aaOceanDataShader_CPP
@@ -136,8 +143,7 @@ void aaOceanDataShader_init(miState *state, aaOceanDataShader_t *params, miBoole
         *mi_eval_scalar (&params->chopAmount), 
         *mi_eval_scalar (&params->time),
         *mi_eval_scalar (&params->repeatTime),
-        miTRUE,
-        miFALSE);
+        miTRUE);
 
         // get the tag of the currently running shader so that we can call its name
         miTag shaderInst; 

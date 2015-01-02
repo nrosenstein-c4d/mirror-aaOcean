@@ -25,15 +25,18 @@
 
 #include "functionLib.h"
 #include "input.h"
-#include "timer/Timer.cpp"
 #include "aaOceanClass.cpp"
 #include "openEXROutput.h"
 
+#include "timer/Timer.cpp"
+
 int main(int argc, char* argv[])
 {
-    Timer t;
-    char msg[256];
+    char msg[512];
     input oceanInput;
+
+    Timer t;
+    t.start();
 
     if(!processInput(argc, argv, oceanInput))
         return 1;
@@ -51,8 +54,6 @@ int main(int argc, char* argv[])
 
     while(currentFrame <= oceanInput.endFrame)
     {
-        t.start();
-
         int absoluteFrame = currentFrame - oceanInput.startFrame;
         float time = float(absoluteFrame) * timestep;
 
@@ -75,16 +76,13 @@ int main(int argc, char* argv[])
             oceanInput.waveChop,        // chop amount
             time,                       // time in seconds
             100000.f,                   // repeat/loop time
-            TRUE,                       // calculate foam
-            FALSE);                     // calculate normals
+            TRUE);                       // calculate foam
         
-        t.stop();
         
         LOG(logDEBUG) << "Logging Ocean Core messages\n" << pOcean->m_state;
-        sprintf(msg,"Time to create ocean grid: %0.2f seconds", t.getElapsedTimeInSec());
         LOG(logINFO) << msg;
         
-        char outputFileName[512];
+        /*char outputFileName[512];
         oceanDataToEXR(pOcean, 
                        &oceanInput.outputFolder[0], 
                        &oceanInput.postfix[0], 
@@ -96,7 +94,12 @@ int main(int argc, char* argv[])
         sprintf(msg,"OpenEXR image location: %s", &outputFileName[0]);
         LOG(logINFO) << msg;
         sprintf(msg,"OpenEXR RGB contains position, Alpha contains raw foam/spray emission data");
+        LOG(logDEBUG) << msg;*/
+
+        t.stop();
+        sprintf(msg,"Elapsed time: %f secs", t.getElapsedTimeInSec());
         LOG(logDEBUG) << msg;
+
 
         currentFrame++;
     }
@@ -104,30 +107,3 @@ int main(int argc, char* argv[])
     delete pOcean;
     return 0;
 }
-
-void sressTest(aaOcean *pOcean)
-{
-    Timer t;
-     // stress-test
-    int steps = INT_MAX / 10;
-    char msg[512];
-    sprintf(msg,"Evaluating Ocean for sample UV's, total samples %d", steps);
-    LOG(logINFO) << msg;
-    
-    t.start();
-    #pragma omp parallel for 
-    for(int i = 0; i < steps; ++i)
-    {
-        // generate random UVs between -5.0 to 5.0
-        float u = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 10.f) - 5.f; 
-        float v = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 10.f) - 5.f; 
-
-        float y = pOcean->getOceanData(u, v, aaOcean::eHEIGHTFIELD);
-        float x = pOcean->getOceanData(u, v, aaOcean::eCHOPX);
-        float z = pOcean->getOceanData(u, v, aaOcean::eCHOPZ);
-    }
-    t.stop();
-    sprintf(msg,"Time to randomly sample ocean grid: %0.2f seconds", t.getElapsedTimeInSec());
-    LOG(logINFO) << msg;
-}
-

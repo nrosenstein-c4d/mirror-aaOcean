@@ -1,11 +1,17 @@
-// aaOcean Arnold Shader
-// Outputs RGBA, with Vector Displacement in RGB, and foam in Alpha
-// Run RGB through a Color to Vector and feed into sta_displacement
+// aaOcean
 // Author: Amaan Akram 
 // www.amaanakram.com
+// Outputs RGBA, with Vector Displacement in RGB, and foam in Alpha
+//
+// LICENSE: 
 // aaOcean is free software and can be redistributed and modified under the terms of the 
 // GNU General Public License (Version 3) as provided by the Free Software Foundation.
 // GNU General Public License http://www.gnu.org/licenses/gpl.html
+//
+// A "New BSD" License for aaOcean can be obtained by contacting the author
+// For more details on aaOcean and associated 3rd Party licenses, please see
+// license.txt file that is part of the aaOcean repository:
+// https://bitbucket.org/amaanakram/aaocean
 
 #include <limits>
 #include <string>
@@ -110,8 +116,7 @@ node_update
         params[p_chopAmount].FLT,
         params[p_time].FLT,
         params[p_repeatTime].FLT,
-        TRUE,
-        FALSE);
+        TRUE);
 
     // see if user has requested normalized or raw foam values
     bool rawOutput = params[p_raw].BOOL;

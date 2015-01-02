@@ -1,9 +1,16 @@
-// aaOcean v2.5 Softimage ICE Deformer
+// aaOcean
 // Author: Amaan Akram 
 // www.amaanakram.com
+//
+// LICENSE: 
 // aaOcean is free software and can be redistributed and modified under the terms of the 
 // GNU General Public License (Version 3) as provided by the Free Software Foundation.
 // GNU General Public License http://www.gnu.org/licenses/gpl.html
+//
+// A "New BSD" License for aaOcean can be obtained by contacting the author
+// For more details on aaOcean and associated 3rd Party licenses, please see
+// license.txt file that is part of the aaOcean repository:
+// https://bitbucket.org/amaanakram/aaocean
 
 #include "xsi_includes.h"
 #include "aaOceanClass.cpp"
@@ -77,6 +84,7 @@ SICALLBACK aaOcean_BeginEvaluate( ICENodeContext& in_ctxt )
     CDataArrayFloat time( in_ctxt, ID_IN_TIME);
     CDataArrayFloat loopTime( in_ctxt, ID_IN_REPEAT_TIME);
     CDataArrayFloat surfaceTension( in_ctxt, ID_IN_SURFACE_TENSION);
+    CDataArrayFloat randWeight( in_ctxt, ID_IN_RAND_WEIGHT);
 
     pOcean->input(resolution[0], 
         seed[0],
@@ -94,7 +102,7 @@ SICALLBACK aaOcean_BeginEvaluate( ICENodeContext& in_ctxt )
         time[0],
         loopTime[0],
         enableFoam[0],
-        FALSE);
+        randWeight[0]);
 
     return CStatus::OK;
 }
@@ -121,8 +129,6 @@ SICALLBACK aaOcean_Evaluate( ICENodeContext& in_ctxt )
 
     if(transform.GetCount() > 1)
         transformSingleton = FALSE;
-
-    Application().LogMessage(L"[aaOcean ICE] : debug");
 
     ULONG out_portID = in_ctxt.GetEvaluatedOutputPortID( ); 
     switch( out_portID )
