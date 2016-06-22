@@ -53,6 +53,7 @@
 #include <maya/MGeometryData.h>
 #include <maya/MGeometryPrimitive.h>
 #include <maya/MFnMesh.h>
+#include <maya/MThreadUtils.h>
 
 #include "aaOceanClass.cpp"
 
@@ -72,12 +73,11 @@ public:
     static  void*       creator();
     static  MStatus     initialize();
 
-    virtual void     postConstructor();
+    //virtual void     postConstructor();
     virtual MStatus  compute( const MPlug& plug, MDataBlock& data );
     bool getUVs(MFnMesh &mesh, MDataBlock &block);
     void getColorSets(MFnMesh &mesh, MDataBlock &block);
     void setColorSets(MFnMesh &mesh, MDataBlock &block);
-    MDataHandle getMeshHandle(const MPlug& plug, MDataBlock &block);
 
     static  MObject  resolution;    
     static  MObject  oceanSize;
@@ -110,6 +110,7 @@ public:
 
     aaOcean* pOcean;
     
+	MPointArray verts;
     MFloatArray u;
     MFloatArray v;
     MColorArray colArrayEigenVector;
@@ -367,10 +368,10 @@ aaOceanDeformer::~aaOceanDeformer()
     }
 }
 
-void aaOceanDeformer::postConstructor()
-{
-    this->setDeformationDetails(MPxDeformerNode::kDeformsAll);
-}
+//void aaOceanDeformer::postConstructor()
+//{
+//    this->setDeformationDetails(MPxDeformerNode::kDeformsAll);
+//}
 
 void* aaOceanDeformer::creator()
 {

@@ -132,115 +132,113 @@ void aaOceanDeformer::setColorSets(MFnMesh &mesh, MDataBlock &block)
     }
 }
 
-MDataHandle aaOceanDeformer::getMeshHandle(const MPlug& plug, MDataBlock &block)
-{
-    // using compute() in deformer as described in
-    // http://download.autodesk.com/us/maya/2011help/API/class_m_px_deformer_node.html
-    // get the input corresponding to this output
-    unsigned int index = plug.logicalIndex();
-    MObject thisNode = this->thisMObject();
-    MPlug inPlug(thisNode, input);
-    inPlug.selectAncestorLogicalIndex(index, input);
-    MDataHandle hInput = block.inputValue(inPlug);
-
-    // get the input geometry and input groupId
-    MDataHandle hGeom = hInput.child(inputGeom);
-    MDataHandle hGroup = hInput.child(groupId);
-    MDataHandle hOutput = block.outputValue(plug);
-    hOutput.copy(hGeom);
-    return hOutput;
-}
-
 MStatus aaOceanDeformer::compute(const MPlug& plug, MDataBlock& block)
 {
-    MStatus status = MStatus::kUnknownParameter;
+	MThreadUtils::syncNumOpenMPThreads();
 
-    if (plug.attribute() == outputGeom) 
-    {
-        MDataHandle hOutput = getMeshHandle(plug, block);
-        MFnMesh mesh(hOutput.asMesh(), &status);
+	MStatus status = MStatus::kUnknownParameter;
+	if (plug.attribute() == outputGeom) 
+	{
+		// get the input corresponding to this output
+		//
+		unsigned int index = plug.logicalIndex();
+		MObject thisNode = this->thisMObject();
+		MPlug inPlug(thisNode, input);
+		inPlug.selectAncestorLogicalIndex(index, input);
+		MDataHandle hInput = block.inputValue(inPlug);
+		MDataHandle hGeom = hInput.child(inputGeom);
+		MDataHandle hGroup = hInput.child(groupId);
+		unsigned int groupId = hGroup.asLong();
+		MDataHandle hOutput = block.outputValue(plug);
+		hOutput.copy(hGeom);
 
-        // if no UVs on mesh, return
-        if(getUVs(mesh, block) == FALSE)
-            return MStatus::kNotFound;
-        
-        // pull in some attribute values for convenience
-        float timeOffsetValue = block.inputValue(timeOffset).asFloat();
-        MTime appTime = block.inputValue(time).asTime();
-        float currentTime = (float)appTime.as(MTime::kSeconds) + timeOffsetValue;
-        bool foam = block.inputValue(doFoam).asBool();
-        bool invert = block.inputValue(invertFoam).asBool();
-        MMatrix transform = block.inputValue(inTransform).asMatrix();
+		// get UVs
+		MFnMesh mesh(hOutput.asMesh(), &status);
 
-        // main ocean input function
-        pOcean->input(  block.inputValue(resolution).asInt(),
-                        block.inputValue(seed).asInt(),
-                        block.inputValue(oceanSize).asFloat(),
-                        block.inputValue(oceanDepth).asFloat(),
-                        block.inputValue(surfaceTension).asFloat(),
-                        block.inputValue(waveSize).asFloat(),
-                        block.inputValue(waveSmooth).asFloat(),
-                        block.inputValue(waveDirection).asFloat(),
-                        block.inputValue(waveAlign).asInt(),
-                        block.inputValue(waveReflection).asFloat(),
-                        block.inputValue(waveSpeed).asFloat(),
-                        block.inputValue(waveHeight).asFloat(),
-                        block.inputValue(waveChop).asFloat(),
-                        currentTime,
-                        block.inputValue(repeatTime).asFloat(),
-                        foam);
+		// pull in some attribute values for convenience
+		float timeOffsetValue = block.inputValue(timeOffset).asFloat();
+		MTime appTime = block.inputValue(time).asTime();
+		float currentTime = (float)appTime.as(MTime::kSeconds) + timeOffsetValue;
+		bool foam = block.inputValue(doFoam).asBool();
+		bool invert = block.inputValue(invertFoam).asBool();
+		MMatrix transform = block.inputValue(inTransform).asMatrix();
 
-        if(foam)
-            getColorSets(mesh, block);
+		// main ocean input function
+		pOcean->input(  block.inputValue(resolution).asInt(),
+		                block.inputValue(seed).asInt(),
+		                block.inputValue(oceanSize).asFloat(),
+		                block.inputValue(oceanDepth).asFloat(),
+		                block.inputValue(surfaceTension).asFloat(),
+		                block.inputValue(waveSize).asFloat(),
+		                block.inputValue(waveSmooth).asFloat(),
+		                block.inputValue(waveDirection).asFloat(),
+		                block.inputValue(waveAlign).asInt(),
+		                block.inputValue(waveReflection).asFloat(),
+		                block.inputValue(waveSpeed).asFloat(),
+		                block.inputValue(waveHeight).asFloat(),
+		                block.inputValue(waveChop).asFloat(),
+		                currentTime,
+		                block.inputValue(repeatTime).asFloat(),
+		                foam);
 
-        MPoint worldSpaceVec;
-        MPoint localSpaceVec;
-        MPointArray verts;
-        mesh.getPoints(verts);
+		//if no UVs on mesh, return
+		if(getUVs(mesh, block) == FALSE)
+			return MStatus::kNotFound;
 
-        int numVertices = mesh.numVertices();
-        float r, g, b, a = 0.f;
-        #pragma omp parallel for private(worldSpaceVec, localSpaceVec, r, g, b, a)
-        for(int i = 0; i < numVertices; ++i) 
-        {
-            // get height field
-            worldSpaceVec[1] = pOcean->getOceanData(u[i], v[i], aaOcean::eHEIGHTFIELD);
-            if(pOcean->isChoppy())
-            {
-                // get x and z displacement
-                worldSpaceVec[0] = pOcean->getOceanData(u[i], v[i], aaOcean::eCHOPX);
-                worldSpaceVec[2] = pOcean->getOceanData(u[i], v[i], aaOcean::eCHOPZ);
+		// get colour sets
+		if (foam)
+			getColorSets(mesh, block);
 
-                if(foam)
-                {
-                    if(foundEigenVector)
-                    {
-                        r = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENMINUSX);
-                        g = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENMINUSZ);
-                        b = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENPLUSX);
-                        a = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENPLUSZ);
-                        colArrayEigenVector.set(i, r, g, b, a);
-                    }
-                    if(foundEigenValue)
-                    {
-                        if(invert)
-                            r = 1.0f - pOcean->getOceanData(u[i], v[i], aaOcean::eFOAM);
-                        else
-                            r = pOcean->getOceanData(u[i], v[i], aaOcean::eFOAM);
+		MPoint worldSpaceVec;
+		MPoint localSpaceVec;
+		float r, g, b, a = 0.f;
 
-                        colArrayEigenValue.set(i, r, r, r);
-                    }
-                }
-            }
+		
+		// get all points
+		MItGeometry iter(hOutput, groupId, false);
+		iter.allPositions(verts);
+		int nPoints = verts.length();
 
-            localSpaceVec = worldSpaceVec * transform;
-            verts[i] += localSpaceVec;
-        }
+		#pragma omp parallel for private(worldSpaceVec, localSpaceVec, r, g, b, a)
+		for (int i = 0; i<nPoints; i++)
+		{
+			worldSpaceVec[1] = pOcean->getOceanData(u[i], v[i], aaOcean::eHEIGHTFIELD);
+			if (pOcean->isChoppy())
+			{
+				// get x and z displacement
+				worldSpaceVec[0] = pOcean->getOceanData(u[i], v[i], aaOcean::eCHOPX);
+				worldSpaceVec[2] = pOcean->getOceanData(u[i], v[i], aaOcean::eCHOPZ);
 
-        if(foam)
-            setColorSets(mesh, block);
-        mesh.setPoints(verts);
-    }
-    block.setClean(plug);
-    return status;
+				if (foam)
+				{
+					if (foundEigenVector)
+					{
+						r = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENMINUSX);
+						g = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENMINUSZ);
+						b = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENPLUSX);
+						a = pOcean->getOceanData(u[i], v[i], aaOcean::eEIGENPLUSZ);
+						colArrayEigenVector.set(i, r, g, b, a);
+					}
+					if (foundEigenValue)
+					{
+						if (invert)
+							r = 1.0f - pOcean->getOceanData(u[i], v[i], aaOcean::eFOAM);
+						else
+							r = pOcean->getOceanData(u[i], v[i], aaOcean::eFOAM);
+
+						colArrayEigenValue.set(i, r, r, r);
+					}
+				}
+			}
+			localSpaceVec = worldSpaceVec * transform;
+			verts[i] += localSpaceVec;
+		}
+		iter.setAllPositions(verts);
+		if (foam)
+			setColorSets(mesh, block);
+		status = MStatus::kSuccess;
+	}
+	block.setClean(plug);
+	return status;
+    
 }
