@@ -65,10 +65,14 @@ inline long int_sqrt(long r) // paul bourke
    return(c);
 }
 
+#if defined(_MSC_VER)
+#if _MSC_VER<1900
 inline int round(float x)
 {
    return  (int)(x > 0.0f ? x + 0.5f : x - 0.5f);
 }
+#endif
+#endif
 
 inline bool isInt(float a)
 {
