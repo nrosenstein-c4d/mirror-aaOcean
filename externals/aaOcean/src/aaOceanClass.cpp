@@ -789,9 +789,9 @@ float aaOcean::getOceanData(float uCoord, float vCoord, aaOcean::arrayType type)
     uCoord = fmod(uCoord, 1.0f);
     vCoord = fmod(vCoord, 1.0f);
     if(uCoord < 0.0f)
-        uCoord = 1.0f + uCoord;
+		uCoord = (fabs(uCoord) >= 1e-6) ? 1.0f + uCoord : 0.0f;
     if(vCoord < 0.0f)
-        vCoord =  1.0f + vCoord;
+		vCoord = (fabs(vCoord) >= 1e-6) ? 1.0f + vCoord : 0.0f;
 
     // use UV coordinates to work out ocean array indeces
     u = uCoord * float(m_resolution);
