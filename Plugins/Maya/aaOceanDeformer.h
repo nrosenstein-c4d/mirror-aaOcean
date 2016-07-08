@@ -58,6 +58,7 @@
 #include "aaOceanClass.cpp"
 
 //Maya Node ID 0x20B6EF34  (548859700)  -- Randomly generated. Change if this conflicts
+#define MAYA_NODE_ID 0x20B6EF34
 
 #ifdef __GNUC__
     #if __GNUC_MINOR__ > 2 
@@ -80,6 +81,7 @@ public:
     void setColorSets(MFnMesh &mesh, MDataBlock &block);
 
     static  MObject  resolution;    
+	static  MObject  spectrum;
     static  MObject  oceanSize;
     static  MObject  oceanDepth;
     static  MObject  surfaceTension;
@@ -119,10 +121,11 @@ public:
     bool foundEigenValue;
     MIntArray faceColorID;
 
-    int numPolygons;
+	int numPolygons;
 };
 
 MObject     aaOceanDeformer::resolution;    
+MObject     aaOceanDeformer::spectrum;
 MObject     aaOceanDeformer::oceanSize; 
 MObject     aaOceanDeformer::oceanDepth;    
 MObject     aaOceanDeformer::surfaceTension;
@@ -145,7 +148,7 @@ MObject     aaOceanDeformer::eigenVectorMap;
 MObject     aaOceanDeformer::eigenValueMap;
 MObject     aaOceanDeformer::inTransform;
 
-MTypeId     aaOceanDeformer::id( 0x20B6EF34 ); //Maya Node ID 548859700
+MTypeId     aaOceanDeformer::id(MAYA_NODE_ID); //Maya Node ID 548859700
 
 MStatus aaOceanDeformer::initialize()
 {
@@ -159,6 +162,17 @@ MStatus aaOceanDeformer::initialize()
     nAttrResolution.setMax(6);  
     addAttribute( resolution );
     attributeAffects( aaOceanDeformer::resolution, aaOceanDeformer::outputGeom);
+
+	MFnNumericAttribute nAttrSpectrum;
+	spectrum = nAttrResolution.create("Spectrum", "spectrum", MFnNumericData::kInt, 0);
+	nAttrSpectrum.setKeyable(true);
+	nAttrSpectrum.setWritable(true);
+	nAttrSpectrum.setSoftMin(1);
+	nAttrSpectrum.setSoftMax(6);
+	nAttrSpectrum.setMin(1);
+	nAttrSpectrum.setMax(6);
+	addAttribute(spectrum);
+	attributeAffects(aaOceanDeformer::spectrum, aaOceanDeformer::outputGeom);
 
     MFnNumericAttribute nAttrOceanSize;
     oceanSize= nAttrOceanSize.create( "oceanSize", "oceanSize", MFnNumericData::kFloat, 100.f );
@@ -354,8 +368,7 @@ aaOceanDeformer::aaOceanDeformer()
     colArrayEigenValue.setLength(1);
     foundEigenVector = FALSE;
     foundEigenValue = FALSE;
-    numPolygons = 0;
-
+	numPolygons = 0;
     MGlobal::displayInfo( "[aaOcean Maya] Created a new ocean patch" );
 }
 aaOceanDeformer::~aaOceanDeformer() 
