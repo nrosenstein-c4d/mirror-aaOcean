@@ -536,7 +536,7 @@ void aaOcean::setupGrid()
 
  void aaOcean::evaluateHokData()
 {
-    float k_sq, k_mag, k_dot_w, philips;
+    float k_sq, k_mag, k_dot_w, spectrum;
 
     const int      n        = m_resolution * m_resolution;
     const float    k_mult   = aa_TWOPI / m_oceanScale;
