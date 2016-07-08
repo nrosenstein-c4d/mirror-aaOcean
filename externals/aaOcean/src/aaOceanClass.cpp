@@ -550,7 +550,7 @@ void aaOcean::setupGrid()
     if (m_damp > 0.0f)
         bDamp = 1;
 
-    #pragma omp parallel for private( k_sq, k_mag, k_dot_w, philips)  
+    #pragma omp parallel for private( k_sq, k_mag, k_dot_w, spectrum)  
     for(int index = 0; index < n; ++index)
     {
         // build Kx and Kz
@@ -562,30 +562,27 @@ void aaOcean::setupGrid()
         k_mag       = 1.0f / sqrt( k_sq );
         k_dot_w     = (m_kX[index] * k_mag) * windx + (m_kZ[index] * k_mag) * windz;
 
+		// build dispersion relationship with oceanDepth relationship
+		m_omega[index] = (aa_GRAVITY / k_mag) * tanh(sqrt(k_sq) * m_oceanDepth);
+
+		// modifying dispersion for capillary waves
+		m_omega[index] = m_omega[index] * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
+
+		m_omega[index] = sqrt(m_omega[index]);
+
+		// add time looping support with OmegaNought
+		m_omega[index] = (int(m_omega[index] / omega0)) * omega0;
+
         // calculate philips spectrum
-        philips     = sqrt((( exp(-1.0f / ( L_sq * k_sq)) * pow(k_dot_w, m_windAlign)) / 
+		spectrum = sqrt((( exp(-1.0f / ( L_sq * k_sq)) * pow(k_dot_w, m_windAlign)) /
                       (k_sq * k_sq)) * exp(-k_sq * m_cutoff));
 
         // reduce reflected waves
-        if(bDamp)
-        {
-            if(k_dot_w < 0.0f)
-                philips *= (1.0f - m_damp);
-        }       
+        if(bDamp && (k_dot_w < 0.0f))
+				spectrum *= (1.0f - m_damp);
 
-        // build dispersion relationship with oceanDepth relationship
-        m_omega[index]   = (aa_GRAVITY / k_mag) * tanh( sqrt( k_sq ) * m_oceanDepth);
-
-        // modifying dispersion for capillary waves
-        m_omega[index] = m_omega[index] * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
-
-        m_omega[index] = sqrt(m_omega[index]);
-
-        // add time looping support with OmegaNought
-        m_omega[index]   = (int(m_omega[index] / omega0)) * omega0;
-
-        m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * philips;
-        m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * philips;
+        m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * spectrum;
+        m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * spectrum;
     }
 
     sprintf(m_state,"\n[aaOcean Core] Finished initializing all ocean data");
@@ -657,8 +654,17 @@ void aaOcean::setupGrid()
         m_fft_chopZ[index].i = -m_hktReal[index] * kZ;
     }
 
-    kiss_fftnd(m_planChopX, m_fft_chopX, m_fft_chopX);
-    kiss_fftnd(m_planChopZ, m_fft_chopZ, m_fft_chopZ);
+	#pragma omp parallel sections
+	{
+	#pragma omp section
+		{
+			kiss_fftnd(m_planChopX, m_fft_chopX, m_fft_chopX);
+		}
+	#pragma omp section
+		{
+			kiss_fftnd(m_planChopZ, m_fft_chopZ, m_fft_chopZ);
+		}
+	}
 
     n = m_resolution;
     for(i = 0; i < n; ++i)
@@ -699,10 +705,22 @@ void aaOcean::evaluateJacobians()
         m_fft_jxz[index].i =  m_hktImag[index] * kXZ;
     }
 
-    kiss_fftnd(m_planJxx, m_fft_jxx, m_fft_jxx);
-    kiss_fftnd(m_planJzz, m_fft_jzz, m_fft_jzz);
-    kiss_fftnd(m_planJxz, m_fft_jxz, m_fft_jxz);
-
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		{
+			kiss_fftnd(m_planJxx, m_fft_jxx, m_fft_jxx); 
+		}
+		#pragma omp section
+		{
+			kiss_fftnd(m_planJzz, m_fft_jzz, m_fft_jzz);
+		}
+		#pragma omp section
+		{
+			kiss_fftnd(m_planJxz, m_fft_jxz, m_fft_jxz);
+		}
+	}
+		
     n = m_resolution;
     for(i = 0; i < n; ++i)
     {
