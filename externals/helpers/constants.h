@@ -20,6 +20,7 @@
 #define CLAMP_TO_RANGE 1
 
 static const float aa_GRAVITY       = 9.80665f;
+static const float aa_GRAVITYSQ		= aa_GRAVITY * aa_GRAVITY;
 static const float aa_EPSILON       = 0.0000001f;
 static const float aa_PI            = 3.14159265358979323846f;
 static const float aa_TWOPI         = 3.14159265358979323846f * 2.0f;
