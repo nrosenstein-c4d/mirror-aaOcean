@@ -146,9 +146,24 @@ int aaOcean::getResolution()
     return m_resolution;
 }
 
-void aaOcean::input(int resolution, unsigned int seed, unsigned int spectrum, float oceanScale, float oceanDepth, float surfaceTension,
-                    float velocity, float cutoff, float windDir, int windAlign, float damp, float waveSpeed, 
-                    float waveHeight, float chopAmount, float time, float loopTime, bool doFoam, float randWeight)
+void aaOcean::input(int resolution, 
+                    unsigned int seed, 
+                    unsigned int spectrum, 
+                    float oceanScale, 
+                    float oceanDepth, 
+                    float surfaceTension,
+                    float velocity, 
+                    float cutoff, 
+                    float windDir, 
+                    int windAlign, 
+                    float damp, 
+                    float waveSpeed, 
+                    float waveHeight, 
+                    float chopAmount, 
+                    float time, 
+                    float loopTime, 
+                    bool doFoam, 
+                    float randWeight)
 {
     // forcing to be power of two, setting minimum resolution of 2^4
     resolution  = (int)pow(2.0f, (4 + abs(resolution))); 
@@ -538,14 +553,28 @@ void aaOcean::setupGrid()
     m_doSetup = 0;
 }
 
+float aaOcean::philips(float k_sq)
+{
+    const float L = m_velocity * m_velocity / aa_GRAVITY;
+    return 5.0f * (exp(-1.0f / (L * L * k_sq))) / (k_sq * k_sq);
+}
+
+float aaOcean::piersonMoskowitz(float omega)
+{
+    return 0.f;
+}
+
+float aaOcean::jonswap(float omega)
+{
+    return 0.f;
+}
+
  void aaOcean::evaluateHokData()
 {
     float k_sq, k_mag, k_dot_w, spectrum;
 
     const int      n        = m_resolution * m_resolution;
     const float    k_mult   = aa_TWOPI / m_oceanScale;
-    const float    L        = m_velocity * m_velocity / aa_GRAVITY;
-    const float    L_sq     = L * L;
     const float    windx    = cos(m_windDir);
     const float    windz    = sin(m_windDir);
     const float    omega0   = aa_TWOPI / m_loopTime;
@@ -557,34 +586,39 @@ void aaOcean::setupGrid()
     #pragma omp parallel for private( k_sq, k_mag, k_dot_w, spectrum)  
     for(int index = 0; index < n; ++index)
     {
-        // build Kx and Kz
+        // build Kx and Kz working vars
         m_kX[index] =  (float)m_xCoord[index] * k_mult; 
         m_kZ[index] =  (float)m_zCoord[index] * k_mult;
-
-        // philips spectrum vars
-        k_sq        = (m_kX[index] * m_kX[index]) + (m_kZ[index] * m_kZ[index]);
-        k_mag       = 1.0f / sqrt( k_sq );
-        k_dot_w     = (m_kX[index] * k_mag) * windx + (m_kZ[index] * k_mag) * windz;
+        k_sq    = (m_kX[index] * m_kX[index]) + (m_kZ[index] * m_kZ[index]);
+        k_mag   = 1.0f / sqrt( k_sq );
 
         // build dispersion relationship with oceanDepth relationship
         m_omega[index] = (aa_GRAVITY / k_mag) * tanh(sqrt(k_sq) * m_oceanDepth);
-
         // modifying dispersion for capillary waves
-        m_omega[index] = m_omega[index] * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
-
+        m_omega[index] *= (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
         m_omega[index] = sqrt(m_omega[index]);
 
         // add time looping support with OmegaNought
         m_omega[index] = (int(m_omega[index] / omega0)) * omega0;
 
         // calculate philips spectrum
-        spectrum = sqrt((( exp(-1.0f / ( L_sq * k_sq)) * pow(k_dot_w, m_windAlign)) /
-                      (k_sq * k_sq)) * exp(-k_sq * m_cutoff));
+        if (m_spectrum == 1)
+            spectrum = piersonMoskowitz(m_omega[index]);
+        else if(m_spectrum == 2)
+            spectrum = jonswap(m_omega[index]);
+        else
+            spectrum = philips(k_sq);
 
+        // spectrum-type indenpendant modifications
+        k_dot_w = (m_kX[index] * k_mag * windx) + (m_kZ[index] * k_mag * windz);
+        spectrum *= pow(k_dot_w, m_windAlign);  // bias towards wind dir
+        spectrum *= exp(-k_sq * m_cutoff);      // eliminate wavelengths smaller than cutoff
+                    
         // reduce reflected waves
         if(bDamp && (k_dot_w < 0.0f))
                 spectrum *= (1.0f - m_damp);
 
+        spectrum = sqrt(spectrum);
         m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * spectrum;
         m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * spectrum;
     }

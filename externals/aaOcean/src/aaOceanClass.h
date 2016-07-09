@@ -170,6 +170,9 @@ private:
     void prepareOcean();
     void setupGrid();
     unsigned int generateUID(const float, const float) const;
+    float philips(float k_sq);
+    float piersonMoskowitz(float omega);
+    float jonswap(float omega);
 
     // tessendorf ocean functions
     void evaluateHokData();
