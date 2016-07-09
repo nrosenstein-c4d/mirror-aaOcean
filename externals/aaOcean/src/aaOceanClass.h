@@ -50,6 +50,7 @@ public:
     // main input function
     // should be called from host app
     void input( int     resolution,
+                unsigned int  spectrum,
                 unsigned int  seed, 
                 float   oceanScale,
                 float   oceanDepth,
@@ -95,6 +96,7 @@ public:
 private:
     int     m_resolution;     // resolution in powers of 2
     unsigned int m_seed;      // seed for random number generator
+    unsigned int m_spectrum;  // philips, JONSWAP, PM etc.
     float   m_oceanScale;     // size of the ocean patch to generate in meters
     float   m_velocity;       // exposed as 'Wave Size' in some aaOcean plugins
     float   m_windDir;        // wind direction in degrees

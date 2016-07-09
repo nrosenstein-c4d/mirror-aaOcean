@@ -40,6 +40,7 @@ aaOcean::aaOcean() :
     // input variables
     m_resolution(-1),
     m_seed(1),
+    m_spectrum(0),
     m_windAlign(0),         
     m_velocity(15.0f),
     m_windDir(45.0f),
@@ -107,6 +108,7 @@ aaOcean::aaOcean(const aaOcean &cpy)
     // empty copy constructor
     input(  cpy.m_resolution,
             cpy.m_seed,
+            cpy.m_spectrum,
             cpy.m_oceanScale,
             cpy.m_oceanDepth,
             cpy.m_surfaceTension,
@@ -144,7 +146,7 @@ int aaOcean::getResolution()
     return m_resolution;
 }
 
-void aaOcean::input(int resolution, unsigned int seed, float oceanScale, float oceanDepth, float surfaceTension, 
+void aaOcean::input(int resolution, unsigned int seed, unsigned int spectrum, float oceanScale, float oceanDepth, float surfaceTension,
                     float velocity, float cutoff, float windDir, int windAlign, float damp, float waveSpeed, 
                     float waveHeight, float chopAmount, float time, float loopTime, bool doFoam, float randWeight)
 {
@@ -188,6 +190,7 @@ void aaOcean::input(int resolution, unsigned int seed, float oceanScale, float o
     damp        = minimum<float>(damp, 1.0f); 
 
     if( m_oceanScale        != oceanScale       ||
+        m_spectrum			!= spectrum			||
         m_oceanDepth        != oceanDepth       ||
         m_surfaceTension    != surfaceTension   || 
         m_windDir           != windDir          ||
@@ -198,6 +201,7 @@ void aaOcean::input(int resolution, unsigned int seed, float oceanScale, float o
         m_loopTime          != loopTime)
     {
         m_oceanScale        = oceanScale;
+        m_spectrum			= spectrum;
         m_oceanDepth        = oceanDepth;
         m_surfaceTension    = surfaceTension;
         m_windDir           = windDir;
@@ -562,24 +566,24 @@ void aaOcean::setupGrid()
         k_mag       = 1.0f / sqrt( k_sq );
         k_dot_w     = (m_kX[index] * k_mag) * windx + (m_kZ[index] * k_mag) * windz;
 
-		// build dispersion relationship with oceanDepth relationship
-		m_omega[index] = (aa_GRAVITY / k_mag) * tanh(sqrt(k_sq) * m_oceanDepth);
+        // build dispersion relationship with oceanDepth relationship
+        m_omega[index] = (aa_GRAVITY / k_mag) * tanh(sqrt(k_sq) * m_oceanDepth);
 
-		// modifying dispersion for capillary waves
-		m_omega[index] = m_omega[index] * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
+        // modifying dispersion for capillary waves
+        m_omega[index] = m_omega[index] * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
 
-		m_omega[index] = sqrt(m_omega[index]);
+        m_omega[index] = sqrt(m_omega[index]);
 
-		// add time looping support with OmegaNought
-		m_omega[index] = (int(m_omega[index] / omega0)) * omega0;
+        // add time looping support with OmegaNought
+        m_omega[index] = (int(m_omega[index] / omega0)) * omega0;
 
         // calculate philips spectrum
-		spectrum = sqrt((( exp(-1.0f / ( L_sq * k_sq)) * pow(k_dot_w, m_windAlign)) /
+        spectrum = sqrt((( exp(-1.0f / ( L_sq * k_sq)) * pow(k_dot_w, m_windAlign)) /
                       (k_sq * k_sq)) * exp(-k_sq * m_cutoff));
 
         // reduce reflected waves
         if(bDamp && (k_dot_w < 0.0f))
-				spectrum *= (1.0f - m_damp);
+                spectrum *= (1.0f - m_damp);
 
         m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * spectrum;
         m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * spectrum;
@@ -654,17 +658,17 @@ void aaOcean::setupGrid()
         m_fft_chopZ[index].i = -m_hktReal[index] * kZ;
     }
 
-	#pragma omp parallel sections
-	{
-	#pragma omp section
-		{
-			kiss_fftnd(m_planChopX, m_fft_chopX, m_fft_chopX);
-		}
-	#pragma omp section
-		{
-			kiss_fftnd(m_planChopZ, m_fft_chopZ, m_fft_chopZ);
-		}
-	}
+    #pragma omp parallel sections
+    {
+    #pragma omp section
+        {
+            kiss_fftnd(m_planChopX, m_fft_chopX, m_fft_chopX);
+        }
+    #pragma omp section
+        {
+            kiss_fftnd(m_planChopZ, m_fft_chopZ, m_fft_chopZ);
+        }
+    }
 
     n = m_resolution;
     for(i = 0; i < n; ++i)
@@ -705,22 +709,22 @@ void aaOcean::evaluateJacobians()
         m_fft_jxz[index].i =  m_hktImag[index] * kXZ;
     }
 
-	#pragma omp parallel sections
-	{
-		#pragma omp section
-		{
-			kiss_fftnd(m_planJxx, m_fft_jxx, m_fft_jxx); 
-		}
-		#pragma omp section
-		{
-			kiss_fftnd(m_planJzz, m_fft_jzz, m_fft_jzz);
-		}
-		#pragma omp section
-		{
-			kiss_fftnd(m_planJxz, m_fft_jxz, m_fft_jxz);
-		}
-	}
-		
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        {
+            kiss_fftnd(m_planJxx, m_fft_jxx, m_fft_jxx); 
+        }
+        #pragma omp section
+        {
+            kiss_fftnd(m_planJzz, m_fft_jzz, m_fft_jzz);
+        }
+        #pragma omp section
+        {
+            kiss_fftnd(m_planJxz, m_fft_jxz, m_fft_jxz);
+        }
+    }
+        
     n = m_resolution;
     for(i = 0; i < n; ++i)
     {
@@ -807,9 +811,9 @@ float aaOcean::getOceanData(float uCoord, float vCoord, aaOcean::arrayType type)
     uCoord = fmod(uCoord, 1.0f);
     vCoord = fmod(vCoord, 1.0f);
     if(uCoord < 0.0f)
-		uCoord = (fabs(uCoord) >= 1e-6) ? 1.0f + uCoord : 0.0f;
+        uCoord = (fabs(uCoord) >= 1e-6) ? 1.0f + uCoord : 0.0f;
     if(vCoord < 0.0f)
-		vCoord = (fabs(vCoord) >= 1e-6) ? 1.0f + vCoord : 0.0f;
+        vCoord = (fabs(vCoord) >= 1e-6) ? 1.0f + vCoord : 0.0f;
 
     // use UV coordinates to work out ocean array indeces
     u = uCoord * float(m_resolution);
