@@ -101,6 +101,8 @@ public:
     static  MObject  timeOffset;
     static  MObject  doFoam;
     static  MObject  invertFoam;
+    static  MObject  spectrumMult;
+    static  MObject  pmWaveSize;
 
     static  MObject  uvMap;
     static  MObject  eigenVectorMap;
@@ -147,6 +149,8 @@ MObject     aaOceanDeformer::uvMap;
 MObject     aaOceanDeformer::eigenVectorMap;
 MObject     aaOceanDeformer::eigenValueMap;
 MObject     aaOceanDeformer::inTransform;
+MObject     aaOceanDeformer::spectrumMult;
+MObject     aaOceanDeformer::pmWaveSize;
 
 MTypeId     aaOceanDeformer::id(MAYA_NODE_ID); //Maya Node ID 548859700
 
@@ -164,15 +168,34 @@ MStatus aaOceanDeformer::initialize()
     attributeAffects( aaOceanDeformer::resolution, aaOceanDeformer::outputGeom);
 
 	MFnNumericAttribute nAttrSpectrum;
-	spectrum = nAttrResolution.create("Spectrum", "spectrum", MFnNumericData::kInt, 0);
+	spectrum = nAttrSpectrum.create("Spectrum", "spectrum", MFnNumericData::kInt, 0);
 	nAttrSpectrum.setKeyable(true);
 	nAttrSpectrum.setWritable(true);
-	nAttrSpectrum.setSoftMin(1);
-	nAttrSpectrum.setSoftMax(6);
-	nAttrSpectrum.setMin(1);
-	nAttrSpectrum.setMax(6);
+	nAttrSpectrum.setSoftMin(0);
+	nAttrSpectrum.setSoftMax(3);
+	nAttrSpectrum.setMin(0);
+	nAttrSpectrum.setMax(3);
 	addAttribute(spectrum);
 	attributeAffects(aaOceanDeformer::spectrum, aaOceanDeformer::outputGeom);
+
+    MFnNumericAttribute nAttrSpectrumMult;
+    spectrumMult = nAttrSpectrumMult.create("spectrumMult", "spectrumMult", MFnNumericData::kFloat, 1.f);
+    nAttrSpectrumMult.setKeyable(true);
+    nAttrSpectrumMult.setWritable(true);
+    nAttrSpectrumMult.setSoftMin(1.f);
+    nAttrSpectrumMult.setSoftMax(100.f);
+    nAttrSpectrumMult.setMin(1.f);
+    addAttribute(spectrumMult);
+    attributeAffects(aaOceanDeformer::spectrumMult, aaOceanDeformer::outputGeom);
+
+    MFnNumericAttribute nAttrPMWaveSize;
+    pmWaveSize = nAttrPMWaveSize.create("pmWaveSize", "pmWaveSize", MFnNumericData::kFloat, 1.f);
+    nAttrPMWaveSize.setKeyable(true);
+    nAttrPMWaveSize.setWritable(true);
+    nAttrPMWaveSize.setMin(1.f);
+    nAttrPMWaveSize.setMax(2.f);
+    addAttribute(pmWaveSize);
+    attributeAffects(aaOceanDeformer::pmWaveSize, aaOceanDeformer::outputGeom);
 
     MFnNumericAttribute nAttrOceanSize;
     oceanSize= nAttrOceanSize.create( "oceanSize", "oceanSize", MFnNumericData::kFloat, 100.f );
@@ -187,7 +210,8 @@ MStatus aaOceanDeformer::initialize()
     oceanDepth= nAttrOceanDepth.create( "oceanDepth", "oceanDepth", MFnNumericData::kFloat, 10000.f );
     nAttrOceanDepth.setKeyable(  true );    
     nAttrOceanDepth.setWritable(true);
-    nAttrOceanDepth.setSoftMin(1.0e-6f);    
+    nAttrOceanDepth.setMin(1.f);
+    nAttrOceanDepth.setSoftMin(1.f);    
     nAttrOceanDepth.setSoftMax(40000.f);        
     addAttribute( oceanDepth );
     attributeAffects( aaOceanDeformer::oceanDepth, aaOceanDeformer::outputGeom);

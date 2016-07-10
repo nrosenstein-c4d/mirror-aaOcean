@@ -164,23 +164,26 @@ MStatus aaOceanDeformer::compute(const MPlug& plug, MDataBlock& block)
 		MMatrix transform = block.inputValue(inTransform).asMatrix();
 
 		// main ocean input function
-		pOcean->input(  block.inputValue(resolution).asInt(),
-		                block.inputValue(seed).asInt(),
-                        block.inputValue(spectrum).asInt(),
-		                block.inputValue(oceanSize).asFloat(),
-		                block.inputValue(oceanDepth).asFloat(),
-		                block.inputValue(surfaceTension).asFloat(),
-		                block.inputValue(waveSize).asFloat(),
-		                block.inputValue(waveSmooth).asFloat(),
-		                block.inputValue(waveDirection).asFloat(),
-		                block.inputValue(waveAlign).asInt(),
-		                block.inputValue(waveReflection).asFloat(),
-		                block.inputValue(waveSpeed).asFloat(),
-		                block.inputValue(waveHeight).asFloat(),
-		                block.inputValue(waveChop).asFloat(),
-		                currentTime,
-		                block.inputValue(repeatTime).asFloat(),
-		                foam);
+        pOcean->input(block.inputValue(resolution).asInt(),
+            block.inputValue(seed).asInt(),
+            block.inputValue(spectrum).asInt(),
+            block.inputValue(oceanSize).asFloat(),
+            block.inputValue(oceanDepth).asFloat(),
+            block.inputValue(surfaceTension).asFloat(),
+            block.inputValue(waveSize).asFloat(),
+            block.inputValue(waveSmooth).asFloat(),
+            block.inputValue(waveDirection).asFloat(),
+            block.inputValue(waveAlign).asInt(),
+            block.inputValue(waveReflection).asFloat(),
+            block.inputValue(waveSpeed).asFloat(),
+            block.inputValue(waveHeight).asFloat(),
+            block.inputValue(waveChop).asFloat(),
+            currentTime,
+            block.inputValue(repeatTime).asFloat(),
+            foam,
+            0.0f, // random weight
+            block.inputValue(spectrumMult).asFloat(),
+            block.inputValue(pmWaveSize).asFloat());
 
 		//if no UVs on mesh, return
 		if(getUVs(mesh, block) == FALSE)

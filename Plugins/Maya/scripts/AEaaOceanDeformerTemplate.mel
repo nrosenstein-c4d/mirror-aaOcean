@@ -4,7 +4,7 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
  
         editorTemplate -beginLayout "Ocean Parameters" -collapse 0;
             editorTemplate -addControl "resolution";
-			editorTemplate -addControl "spectrum";
+			
             editorTemplate -addControl "oceanSize";
             editorTemplate -addControl "seed";
             editorTemplate -label "Current Time (secs)" -addControl "time";
@@ -37,6 +37,9 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
         editorTemplate -beginLayout "Advanced Parameters" -collapse 1;
             editorTemplate -addControl "oceanDepth";
             editorTemplate -addControl "surfaceTension";
+            editorTemplate -label "Spectrum Type" -addControl "spectrum";
+            editorTemplate -label "Spectrum Multiplier" -addControl "spectrumMult";
+            editorTemplate -label "Pierson-Moskowitz Wave Size" -addControl "pmWaveSize";
         editorTemplate -endLayout;
  
     editorTemplate -endLayout;
