@@ -165,8 +165,8 @@ MStatus aaOceanDeformer::compute(const MPlug& plug, MDataBlock& block)
 
 		// main ocean input function
         pOcean->input(block.inputValue(resolution).asInt(),
-            block.inputValue(seed).asInt(),
             block.inputValue(spectrum).asInt(),
+            block.inputValue(seed).asInt(),
             block.inputValue(oceanSize).asFloat(),
             block.inputValue(oceanDepth).asFloat(),
             block.inputValue(surfaceTension).asFloat(),
@@ -196,7 +196,6 @@ MStatus aaOceanDeformer::compute(const MPlug& plug, MDataBlock& block)
 		MPoint worldSpaceVec;
 		MPoint localSpaceVec;
 		float r, g, b, a = 0.f;
-
 		
 		// get all points
 		MItGeometry iter(hOutput, groupId, false);
