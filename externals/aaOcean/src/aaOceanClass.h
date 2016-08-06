@@ -21,7 +21,7 @@
 #include "kissfft/tools/kiss_fftnd.c"
 
 class aaOcean
-{ 
+{
 public:
     aaOcean();
     aaOcean(const aaOcean &cpy);
@@ -31,42 +31,47 @@ public:
     // declared here for convenience in identifying array names
     enum arrayType
     {
-       eHEIGHTFIELD,
-       eCHOPX,
-       eCHOPZ,
-       eFOAM,
-       eEIGENPLUSX,
-       eEIGENPLUSZ,
-       eEIGENMINUSX,
-       eEIGENMINUSZ
+        eHEIGHTFIELD,
+        eCHOPX,
+        eCHOPZ,
+        eFOAM,
+        eEIGENPLUSX,
+        eEIGENPLUSZ,
+        eEIGENMINUSX,
+        eEIGENMINUSZ
     };
-        
+
     // array for holding the current state of aaOcean object
-    char m_state[512]; 
+    char m_state[512];
 
     // cleans up any left over data after ocean arrays are ready
     void clearResidualArrays();
-    
+
     // main input function
     // should be called from host app
-    void input( int     resolution,
-                unsigned int  spectrum,
-                unsigned int  seed, 
-                float   oceanScale,
-                float   oceanDepth,
-                float   surfaceTension,
-                float   velocity, 
-                float   cutoff, 
-                float   windDir, 
-                int     windAlign, 
-                float   damp,  
-                float   waveSpeed, 
-                float   waveHeight,
-                float   chopAmount,
-                float   time,
-                float   repeatTime,
-                bool    doFoam,
-                float   randWeight=0);
+    void input(
+        int     resolution,
+        unsigned int  spectrum,
+        unsigned int  seed,
+        float   oceanScale,
+        float   oceanDepth,
+        float   surfaceTension,
+        float   velocity,
+        float   cutoff,
+        float   windDir,
+        int     windAlign,
+        float   damp,
+        float   waveSpeed,
+        float   waveHeight,
+        float   chopAmount,
+        float   time,
+        float   repeatTime,
+        bool    doFoam,
+        float   randWeight = 0.f,
+        float   spectrumMult = 1.f,
+        float   pmWaveSize = 1.f,
+        float   jswpfetch = 100.f,
+        float   jswpgamma = 3.3f);
 
     // main output function
     // should be called from host app
@@ -91,7 +96,7 @@ public:
     // Returns current ocean state
     // Needs better implementation
     char* getState();
-    
+
     // initialization functions
 private:
     int     m_resolution;     // resolution in powers of 2
@@ -113,7 +118,13 @@ private:
     float   m_foamBoundmin;   // stores eigenvalue array bounds
     float   m_foamBoundmax;   // stores eigenvalue array bounds
     float   m_randWeight;     // control blend between rand distributions
-    
+
+    // optional variables
+    float   m_spectrumMult;   // multiplier for generated spectrum
+    float   m_pmWaveSize;     // Pierson Moskowitz wave size
+    float   m_jswpfetch;      // jonswap fetch
+    float   m_jswpgamma;      // jonswap gamma
+
     // ocean array pointers
     int     *m_xCoord;  // holds ocean grid coordinates
     int     *m_zCoord;  // holds ocean grid coordinates
@@ -171,7 +182,7 @@ private:
     void setupGrid();
     unsigned int generateUID(const float, const float) const;
     float philips(float k_sq);
-    float piersonMoskowitz(float omega);
+    float piersonMoskowitz(float omega, float k_sq);
     float jonswap(float omega);
 
     // tessendorf ocean functions
@@ -180,7 +191,7 @@ private:
     void evaluateChopField();
     void evaluateJacobians();
     void evaluateNormal();
-    
+
     // interpolation functions
     inline float catmullRom(const float t, const float a, const float b, const float c, const float d) const;
     inline int wrap(int x) const;
