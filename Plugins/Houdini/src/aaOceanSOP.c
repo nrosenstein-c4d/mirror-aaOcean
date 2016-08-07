@@ -13,7 +13,6 @@
 // https://bitbucket.org/amaanakram/aaocean
 
 #include "aaOceanSOP.h"
-
 #include <SYS/SYS_Math.h>
 #include <UT/UT_DSOVersion.h>
 #include <UT/UT_Interrupt.h>
@@ -65,6 +64,9 @@ static PRM_Name names[] =
     PRM_Name("loopTime",        "Loop Time"),
     PRM_Name("uvAttribute",     "UV Attribute"),
 
+    PRM_Name("spectrum",        "Spectrum Type"),
+    PRM_Name("spectrumMult",     "Spectrum Multiplier"),
+    PRM_Name("pmWaveSize",       "PM Wave Size"),
 };
 
 // defining some custom ranges and defaults
@@ -87,9 +89,19 @@ static PRM_Default      velocityDefault(4.0);
 static PRM_Range        loopTimeRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 1000.0);
 static PRM_Default      loopTimeDefault(1000.0);
 
+static PRM_Range        spectrumRange(PRM_RANGE_RESTRICTED, 0, PRM_RANGE_RESTRICTED, 2);
+static PRM_Default      spectrumDefault(0);
+
+static PRM_Range        spectrumMultRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 100.0);
+static PRM_Default      spectrumMultDefault(1.0);
+
+static PRM_Range        pmWaveSizeRange(PRM_RANGE_RESTRICTED, 1.0, PRM_RANGE_UI, 2.0);
+static PRM_Default      pmWaveSizeDefault(1.0);
+
 PRM_Template aaOceanSOP::myTemplateList[] = 
 {   
     PRM_Template(PRM_INT_E, 1, &names[0],  &resolutionDefault,  0, &resolutionRange),       // resolution   // 0
+    PRM_Template(PRM_INT_E, 1, &names[17], &spectrumDefault,    0, &spectrumRange),         // spectrum type   // 17
     PRM_Template(PRM_FLT_J, 1, &names[2],  &oceanScaleDefault,  0, &oceanScaleRange),       // oceanScale   // 2
     PRM_Template(PRM_FLT_J, 1, &names[3],  &oceanDepthDefault,  0, &oceanDepthRange),       // oceanDepth   // 3
     PRM_Template(PRM_FLT_J, 1, &names[4],  PRMzeroDefaults,     0, &PRMunitRange),          // surfaceTension// 4
@@ -109,6 +121,9 @@ PRM_Template aaOceanSOP::myTemplateList[] =
 
     PRM_Template(PRM_TOGGLE,1, &names[13]),                                                 // enable Foam  // 13
     PRM_Template(PRM_STRING,1, &names[16], 0),                                              // UV Attribute // 16
+
+    PRM_Template(PRM_FLT_J, 1, &names[18], &spectrumMultDefault, 0, &spectrumMultRange),    // spectrumMult // 18
+    PRM_Template(PRM_FLT_J, 1, &names[19], &pmWaveSizeDefault,   0, &pmWaveSizeRange),      // pm wave size // 19
 
     PRM_Template(),
 };
@@ -141,6 +156,8 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
     if (lockInputs(context) >= UT_ERROR_ABORT)
         return error();
 
+    pOcean = new aaOcean;
+   
     duplicateSource(0, context);
     setVariableOrder(3, 2, 0, 1);
     setCurGdh(0, myGdpHandle);
@@ -158,8 +175,9 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
         enableEigens = TRUE;
     now = now + TIMEOFFSET(now);
 
-    pOcean->input(  RESOLUTION(), 
-                    SEED(),
+    pOcean->input(  RESOLUTION(),
+                    SPECTRUM(),
+					SEED(),
                     OCEANSCALE(now),
                     OCEANDEPTH(now),
                     SURFACETENSION(now),
@@ -174,7 +192,9 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
                     now,
                     LOOPTIME(now),
                     enableEigens,
-                    FALSE);
+                    0.0f,
+                    SPECTRUMMULT(now),
+                    PMWAVESIZE(now));
 
     // get the user-specified attribute that holds uv-data
     getUVAttributeName(UvAttribute);
@@ -215,7 +235,8 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
     
     // inputs validated. Begin writing ocean data to output handles
     int npts = gdp->getNumPoints();
-    #pragma omp parallel for 
+    
+	// #pragma omp parallel for 
     for (int pt_offset = 0; pt_offset < npts; ++pt_offset)
     {
         UT_Vector3F pos = gdp->getPos3(pt_offset);
@@ -226,13 +247,15 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
         // Conforming with other apps to make ocean shape consistent across apps
         float u = UV.x();
         float v = 1.0f - (fmod(UV.y(), 1.0f));
-
+        
         pos.y() += pOcean->getOceanData(u, v, aaOcean::eHEIGHTFIELD);
+
         if(pOcean->isChoppy())
         {
             pos.x() += pOcean->getOceanData(u, v, aaOcean::eCHOPX);
             pos.z() += pOcean->getOceanData(u, v, aaOcean::eCHOPZ);
         }
+        
         gdp->setPos3(pt_offset, pos);
 
        if(enableEigens)

@@ -51,6 +51,7 @@ private:
     
 
     int     RESOLUTION()            { return evalInt("resolution", 0, 0); }
+    int     SPECTRUM()              { return evalInt("spectrum", 0, 0); }
     int     SEED()                  { return evalInt("seed", 0, 0); }
     fpreal  OCEANSCALE(fpreal t)    { return evalFloat("oceanScale", 0, t); }
     fpreal  OCEANDEPTH(fpreal t)    { return evalFloat("oceanDepth", 0, t); }
@@ -68,6 +69,8 @@ private:
     int     ENABLEEIGENS()          { return evalInt("enableEigens", 0, 0); }
     fpreal  TIMEOFFSET(fpreal t)    { return evalFloat("timeOffset", 0, t); }
     fpreal  LOOPTIME(fpreal t)      { return evalFloat("loopTime", 0, t); }
+    fpreal  SPECTRUMMULT(fpreal t)  { return evalFloat("spectrumMult", 0, t); }
+    fpreal  PMWAVESIZE(fpreal t)    { return evalFloat("pmWaveSize", 0, t); }
 
     void    getUVAttributeName(UT_String &str){ evalString(str, "uvAttribute", 0, 0); }
     void    getEigenPlusAttribute(UT_String &str){ evalString(str, "eigenPlusAttribute", 0, 0); }
