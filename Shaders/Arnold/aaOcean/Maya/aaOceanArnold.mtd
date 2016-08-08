@@ -61,7 +61,7 @@
 	[attr fMin]
 		default             FLOAT   0.0
 	[attr fMax]
-		default             FLOAT   0.0
+		default             FLOAT   1.0
 	[attr writeFile]
 		default             BOOL   False
 	[attr outputFolder]
