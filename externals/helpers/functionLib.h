@@ -87,7 +87,7 @@ inline float rescale(const float& value, const float& oldMin, const float& oldMa
   const float oldDistance = oldMax - oldMin;
   const float newDistance = newMax - newMin;
 
-  const float distance = (value - oldMin) / oldDistance;
+  const float distance = (value - oldMin) / maximum(oldDistance, 0.0001f);
   const float newValue = newMin + (distance * newDistance);
 
   return newValue;
