@@ -39,17 +39,19 @@ private:
     GA_RWAttributeRef eVecPlusRef;
     GA_RWAttributeRef eVecMinusRef;
     GA_RWAttributeRef eValuesRef;
+    GA_RWAttributeRef spectrumRef;
     GA_RWHandleV3 eVecPlusHandle;
     GA_RWHandleV3 eVecMinusHandle;
     GA_RWHandleF eValuesHandle;
+    GA_RWHandleF spectrumHandle;
 
     bool enableEigens;
     char eVecPlusName[10];
     char eVecMinusName[10];
     char eValuesName[10];
+    char spectrumName[15];
     UT_String   UvAttribute;
     
-
     int     RESOLUTION()            { return evalInt("resolution", 0, 0); }
     int     SPECTRUM()              { return evalInt("spectrum", 0, 0); }
     int     SEED()                  { return evalInt("seed", 0, 0); }
@@ -70,12 +72,15 @@ private:
     fpreal  TIMEOFFSET(fpreal t)    { return evalFloat("timeOffset", 0, t); }
     fpreal  LOOPTIME(fpreal t)      { return evalFloat("loopTime", 0, t); }
     fpreal  SPECTRUMMULT(fpreal t)  { return evalFloat("spectrumMult", 0, t); }
-    fpreal  PMWAVESIZE(fpreal t)    { return evalFloat("pmWaveSize", 0, t); }
+    fpreal  PEAKSHARPENING(fpreal t){ return evalFloat("peakSharpening", 0, t); }
+    fpreal  FETCH(fpreal t)         { return evalFloat("fetch", 0, t); }
+    fpreal  SWELLAMOUNT(fpreal t)   { return evalFloat("swellAmount", 0, t); }
 
     void    getUVAttributeName(UT_String &str){ evalString(str, "uvAttribute", 0, 0); }
     void    getEigenPlusAttribute(UT_String &str){ evalString(str, "eigenPlusAttribute", 0, 0); }
     void    getEigenMinusAttribute(UT_String &str){ evalString(str, "eigenMinusAttribute", 0, 0); }
     void    getEigenValueAttribute(UT_String &str){ evalString(str, "eigenValueAttribute", 0, 0); }
+    void    getSpectrumAttribute(UT_String &str) { evalString(str, "spectrumAttribute", 0, 0); }
     
     /// This variable is used together with the call to the "checkInputChanged"
     /// routine to notify the handles (if any) if the input has changed.

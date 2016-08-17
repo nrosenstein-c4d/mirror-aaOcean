@@ -42,6 +42,15 @@ void newSopOperator(OP_OperatorTable *table)
         0));
 }
 
+static PRM_Name spectrumNames[] =
+{
+    PRM_Name("Philips",  "Philips"),
+    PRM_Name("Pierson-Morkowitz", "Pierson-Morkowitz"),
+    PRM_Name("TMA",  "TMA"),
+    PRM_Name(0)
+};
+static PRM_ChoiceList spectrumNamesMenu(PRM_CHOICELIST_SINGLE, spectrumNames);
+
 static PRM_Name names[] = 
 {
     PRM_Name("resolution",      "Resolution"),
@@ -49,12 +58,10 @@ static PRM_Name names[] =
     PRM_Name("oceanScale",      "Ocean Scale"),
     PRM_Name("oceanDepth",      "Ocean Depth"),
     PRM_Name("surfaceTension",  "Surface Tension"),
-
     PRM_Name("velocity",        "Wave Size"),
     PRM_Name("cutoff",          "Wave Smooth"),
     PRM_Name("windDir",         "Wind Dir"),
     PRM_Name("windAlign",       "Wind Align"),
-
     PRM_Name("damp",            "Reflected Waves"),
     PRM_Name("waveSpeed",       "Wave Speed"),
     PRM_Name("waveHeight",      "Wave Height"),
@@ -63,10 +70,11 @@ static PRM_Name names[] =
     PRM_Name("timeOffset",      "Time Offset"),
     PRM_Name("loopTime",        "Loop Time"),
     PRM_Name("uvAttribute",     "UV Attribute"),
-
     PRM_Name("spectrum",        "Spectrum Type"),
-    PRM_Name("spectrumMult",     "Spectrum Multiplier"),
-    PRM_Name("pmWaveSize",       "PM Wave Size"),
+    PRM_Name("spectrumMult",    "Spectrum Multiplier"),
+    PRM_Name("peakSharpening",   "Peak Sharpening"),
+    PRM_Name("fetch",           "TMA Fetch"),
+    PRM_Name("swellAmount",     "Swell Amount"),
 };
 
 // defining some custom ranges and defaults
@@ -83,7 +91,7 @@ static PRM_Default      oceanDepthDefault(10000.0);
 static PRM_Range        seedRange(PRM_RANGE_RESTRICTED, 1, PRM_RANGE_RESTRICTED, 15);
 static PRM_Default      seedDefault(1);
 
-static PRM_Range        velocityRange(PRM_RANGE_RESTRICTED, 0.0, PRM_RANGE_RESTRICTED, 30.0);
+static PRM_Range        velocityRange(PRM_RANGE_RESTRICTED, 0.0, PRM_RANGE_UI, 300.0);
 static PRM_Default      velocityDefault(4.0);
 
 static PRM_Range        loopTimeRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 1000.0);
@@ -92,19 +100,28 @@ static PRM_Default      loopTimeDefault(1000.0);
 static PRM_Range        spectrumRange(PRM_RANGE_RESTRICTED, 0, PRM_RANGE_RESTRICTED, 2);
 static PRM_Default      spectrumDefault(0);
 
+static PRM_Range        surftRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 100.0);
+static PRM_Default      surftDefault(1.0);
+
 static PRM_Range        spectrumMultRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 100.0);
 static PRM_Default      spectrumMultDefault(1.0);
 
-static PRM_Range        pmWaveSizeRange(PRM_RANGE_RESTRICTED, 1.0, PRM_RANGE_UI, 2.0);
-static PRM_Default      pmWaveSizeDefault(1.0);
+static PRM_Range        peakSharpeningRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 6.0);
+static PRM_Default      peakSharpeningDefault(1.0);
+
+static PRM_Range        fetchRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 1000.0);
+static PRM_Default      fetchDefault(20.0);
+
+static PRM_Range        swellRange(PRM_RANGE_RESTRICTED, -50.0, PRM_RANGE_UI, 50.f);
+static PRM_Default      swellDefault(0.0);
 
 PRM_Template aaOceanSOP::myTemplateList[] = 
 {   
     PRM_Template(PRM_INT_E, 1, &names[0],  &resolutionDefault,  0, &resolutionRange),       // resolution   // 0
-    PRM_Template(PRM_INT_E, 1, &names[17], &spectrumDefault,    0, &spectrumRange),         // spectrum type   // 17
+    PRM_Template(PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[17], 0, &spectrumNamesMenu),
     PRM_Template(PRM_FLT_J, 1, &names[2],  &oceanScaleDefault,  0, &oceanScaleRange),       // oceanScale   // 2
     PRM_Template(PRM_FLT_J, 1, &names[3],  &oceanDepthDefault,  0, &oceanDepthRange),       // oceanDepth   // 3
-    PRM_Template(PRM_FLT_J, 1, &names[4],  PRMzeroDefaults,     0, &PRMunitRange),          // surfaceTension// 4
+    PRM_Template(PRM_FLT_J, 1, &names[4],  &surftDefault,   0, &surftRange),                // surfaceTension// 4
     PRM_Template(PRM_INT_E, 1, &names[1],  &seedDefault,        0, &seedRange),             // seed         // 1
     PRM_Template(PRM_FLT_J, 1, &names[14], PRMzeroDefaults,     0, &PRMscaleRange),         // timeOffset   // 14
     PRM_Template(PRM_FLT_J, 1, &names[15], &loopTimeDefault,    0, &loopTimeRange),         // loop time    // 15
@@ -123,11 +140,12 @@ PRM_Template aaOceanSOP::myTemplateList[] =
     PRM_Template(PRM_STRING,1, &names[16], 0),                                              // UV Attribute // 16
 
     PRM_Template(PRM_FLT_J, 1, &names[18], &spectrumMultDefault, 0, &spectrumMultRange),    // spectrumMult // 18
-    PRM_Template(PRM_FLT_J, 1, &names[19], &pmWaveSizeDefault,   0, &pmWaveSizeRange),      // pm wave size // 19
+    PRM_Template(PRM_FLT_J, 1, &names[19], &peakSharpeningDefault,0, &peakSharpeningRange), // peak sharpening// 19
+    PRM_Template(PRM_FLT_J, 1, &names[20], &fetchDefault,        0, &fetchRange),           // fetch // 20
+    PRM_Template(PRM_FLT_J, 1, &names[21], &swellDefault,        0, &swellRange),           // swell // 21
 
     PRM_Template(),
 };
-
 
 OP_Node *aaOceanSOP::myConstructor(OP_Network *net, const char *name, OP_Operator *op)
 {
@@ -140,6 +158,7 @@ aaOceanSOP::aaOceanSOP(OP_Network *net, const char *name, OP_Operator *op)
     sprintf(eVecPlusName,   "eVecPlus");
     sprintf(eVecMinusName,  "eVecMinus");
     sprintf(eValuesName,    "eValues");
+    sprintf(spectrumName,   "spectrum");
     enableEigens = FALSE;
 
     pOcean = new aaOcean;
@@ -194,7 +213,9 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
                     enableEigens,
                     0.0f,
                     SPECTRUMMULT(now),
-                    PMWAVESIZE(now));
+                    PEAKSHARPENING(now),
+                    FETCH(now),
+                    SWELLAMOUNT(now));
 
     // get the user-specified attribute that holds uv-data
     getUVAttributeName(UvAttribute);
@@ -212,8 +233,8 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
     {
         // uv attribute not found
         char msg[256];
-        sprintf(msg, "[aaOcean] Specified UV attribute \'%s\' not found on geometry.\
-                     \nUV's are required for aaOcean to cook", UVAttribName);
+        sprintf(msg, "[aaOcean] Specified UV Point attribute \'%s\' not found on geometry.\
+                     \nCheck if Point-type UV's exist on input geometry", UVAttribName);
         std::cout<<msg;
         std::cout.flush();
         addError(SOP_MESSAGE, msg); 
@@ -231,6 +252,9 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
         eVecPlusHandle  = GA_RWHandleV3(eVecPlusRef.getAttribute());
         eVecMinusHandle = GA_RWHandleV3(eVecMinusRef.getAttribute());
         eValuesHandle   = GA_RWHandleF(eValuesRef.getAttribute());
+
+        spectrumRef = gdp->addFloatTuple(GA_ATTRIB_POINT, spectrumName, 1);
+        spectrumHandle = GA_RWHandleF(spectrumRef.getAttribute());
     }
     
     // inputs validated. Begin writing ocean data to output handles
@@ -262,8 +286,7 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
         {
             UT_Vector3F eigenVectorPlusValue;
             UT_Vector3F eigenVectorMinusValue;
-            float eigenValue;
-
+            
             eigenVectorPlusValue.x() =  pOcean->getOceanData(u, v, aaOcean::eEIGENPLUSX);
             eigenVectorPlusValue.y() =  0.0f;
             eigenVectorPlusValue.z() =  pOcean->getOceanData(u, v, aaOcean::eEIGENPLUSZ);
@@ -272,18 +295,19 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
             eigenVectorMinusValue.y() = 0.0f;
             eigenVectorMinusValue.z() = pOcean->getOceanData(u, v, aaOcean::eEIGENMINUSZ);
 
-            eigenValue = pOcean->getOceanData(u, v, aaOcean::eFOAM);
+            eVecPlusHandle.set(pt_offset, eigenVectorPlusValue);
+            eVecMinusHandle.set(pt_offset, eigenVectorMinusValue);
 
-            eVecPlusHandle.set(pt_offset,eigenVectorPlusValue);
-            eVecMinusHandle.set(pt_offset,eigenVectorMinusValue);
+            float eigenValue = pOcean->getOceanData(u, v, aaOcean::eFOAM);
             eValuesHandle.set(pt_offset,eigenValue);
+
+            float spectrumValue = pOcean->getOceanData(u, v, aaOcean::eSPECTRUM);
+            spectrumHandle.set(pt_offset, spectrumValue);
         }
     }
     unlockInputs();
-
     return error();
 }
-
 
 const char *aaOceanSOP::inputLabel(unsigned) const
 {
