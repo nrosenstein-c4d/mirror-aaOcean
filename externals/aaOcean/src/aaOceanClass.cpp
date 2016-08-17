@@ -74,6 +74,7 @@ aaOcean::aaOcean() :
     m_omega(0),
     m_rand1(0),
     m_rand2(0),
+    m_fftSpectrum(0),
 
     // output arrays
     m_out_fft_htField(0),
@@ -183,7 +184,20 @@ void aaOcean::input(
     }
 
     // scaled for better UI control
-    m_waveHeight    = waveHeight * 0.01f;
+    if (spectrum < 2 )
+    {
+        // for Philips and PM spectrums
+        waveHeight *= 0.01f;
+        chopAmount *= 0.01f;
+    }
+    else
+    {
+        // TMA spectrum
+        waveHeight *= 0.1f;
+        chopAmount *= 0.1f;
+    }
+
+    m_waveHeight    = waveHeight;
     m_time          = time;
     m_waveSpeed     = waveSpeed;
     m_doFoam        = doFoam;
@@ -191,7 +205,7 @@ void aaOcean::input(
     if (chopAmount > 1.0e-6f)
     {
         // scaled for better UI control
-        m_chopAmount = chopAmount * 0.01f;
+        m_chopAmount = chopAmount;
         m_doChop = 1;
     }
     else
@@ -314,6 +328,7 @@ void aaOcean::allocateBaseArrays()
     m_omega = (float*)malloc(size * sizeof(float));
     m_rand1 = (float*)malloc(size * sizeof(float));
     m_rand2 = (float*)malloc(size * sizeof(float));
+    m_fftSpectrum = (float*)malloc(size * sizeof(float));
 
     m_out_fft_htField = (float*)malloc(size * sizeof(float));
     m_out_fft_chopX = (float*)malloc(size * sizeof(float));
@@ -326,6 +341,7 @@ void aaOcean::allocateBaseArrays()
     m_arrayPointer[eHEIGHTFIELD] = m_out_fft_htField;
     m_arrayPointer[eCHOPX] = m_out_fft_chopX;
     m_arrayPointer[eCHOPZ] = m_out_fft_chopZ;
+    m_arrayPointer[eSPECTRUM] = m_fftSpectrum;
 
     m_doHoK = 1;
     m_doSetup = 1;
@@ -361,18 +377,23 @@ void aaOcean::allocateFoamArrays()
     m_isFoamAllocated = 1;
 }
 
-
 void aaOcean::clearResidualArrays()
 {
     bool isResidualAllocated = 1;
+
+    if (m_fftSpectrum)
+    {
+        free(m_fftSpectrum);
+        m_fftSpectrum = 0;
+    }
+    else
+        isResidualAllocated = 0;
 
     if (m_rand2)
     {
         free(m_rand2);
         m_rand2 = 0;
     }
-    else
-        isResidualAllocated = 0;
 
     if (m_rand1)
     {
@@ -582,10 +603,8 @@ void aaOcean::setupGrid()
 float aaOcean::philips(float k_sq)
 {
     const float L = m_velocity * m_velocity / aa_GRAVITY;
-    return (exp(-1.0f / (L * L * k_sq))) / (k_sq * k_sq);
+    return ((exp(-1.0f / (L * L * k_sq))) / (k_sq * k_sq)) * m_spectrumMult;
 }
-
-
 
 float aaOcean::piersonMoskowitz(float omega, float k_sq)
 {
@@ -597,7 +616,7 @@ float aaOcean::piersonMoskowitz(float omega, float k_sq)
     float spectrum = 100.f * alpha * aa_GRAVITYSQ / pow(omega, 5.f);
     spectrum *= exp(-beta * pow(peakOmegaPM / omega, 4.f));
 
-    return spectrum;
+    return spectrum * m_spectrumMult;
 }
 
 float aaOcean::tma(float omega, int index)
@@ -621,11 +640,12 @@ float aaOcean::tma(float omega, int index)
     float kitaigorodskiiDepth =  0.5f + (0.5f * tanh(1.8f * (wh - 1.125f)));
 
     tma *= kitaigorodskiiDepth;
-    return  tma;
+    return  tma * m_spectrumMult;
 }
 
 float aaOcean::swell(float omega, float kdotw, float k_mag)
 {
+    // TODO: implement frequency-dependent swell generation
     return 1.f;
 }
 
@@ -657,18 +677,18 @@ void aaOcean::evaluateHokData()
         m_omega[index] = aa_GRAVITY * k_mag * tanh(k_mag * m_oceanDepth);
 
         // calculate spectrum
-        if (m_spectrum == 1)
+        if (m_spectrum == 1) // Pierson-Moskowitz
         {
             m_omega[index] = sqrt(m_omega[index]);
-            spectrum = piersonMoskowitz(m_omega[index], k_sq);
+            m_fftSpectrum[index] = piersonMoskowitz(m_omega[index], k_sq);
 
         }
-        else if (m_spectrum == 2)
+        else if (m_spectrum == 2) //  Texel MARSEN ARSLOE (TMA) SpectruM
         {
             m_omega[index] = sqrt(m_omega[index]);
-            spectrum = tma(m_omega[index], index);
+            m_fftSpectrum[index] = tma(m_omega[index], index);
         }
-        else
+        else // Philips
         { 
             // modifying dispersion for capillary waves
             m_omega[index] = aa_GRAVITY * k_mag * (1.0f + k_sq * m_surfaceTension * m_surfaceTension);
@@ -676,21 +696,20 @@ void aaOcean::evaluateHokData()
             // add time looping support with OmegaNought
             m_omega[index] = (int(m_omega[index] / omega0)) * omega0;
 
-            spectrum = philips(k_sq);
-            spectrum = sqrt(spectrum);
+            m_fftSpectrum[index] = sqrt(philips(k_sq));
         }
 
         // spectrum-type indenpendant modifications
         k_dot_w = (m_kX[index] * k_mag_inv * windx) + (m_kZ[index] * k_mag_inv * windz);
-        spectrum *= pow(k_dot_w, m_windAlign);  // bias towards wind dir
-        spectrum *= exp(-k_sq * m_cutoff);      // eliminate wavelengths smaller than cutoff
+        m_fftSpectrum[index] *= pow(k_dot_w, m_windAlign);  // bias towards wind dir
+        m_fftSpectrum[index] *= exp(-k_sq * m_cutoff);      // eliminate wavelengths smaller than cutoff
 
        // reduce reflected waves
         if (bDamp && (k_dot_w < 0.0f))
-            spectrum *= (1.0f - m_damp);
+            m_fftSpectrum[index] *= (1.0f - m_damp);
 
-        m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * spectrum;
-        m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * spectrum;
+        m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * m_fftSpectrum[index];
+        m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * m_fftSpectrum[index];
     }
 
     sprintf(m_state, "\n[aaOcean Core] Finished initializing all ocean data");

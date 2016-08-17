@@ -38,7 +38,8 @@ public:
         eEIGENPLUSX,
         eEIGENPLUSZ,
         eEIGENMINUSX,
-        eEIGENMINUSZ
+        eEIGENMINUSZ,
+        eSPECTRUM
     };
 
     // array for holding the current state of aaOcean object
@@ -137,6 +138,7 @@ private:
     float   *m_omega;   // omega (see Tessendorf paper)
     float   *m_rand1;   // random number array 
     float   *m_rand2;   // random number array 
+    float   *m_fftSpectrum; // spectrum array 
 
     // ocean output array pointers
     float *m_out_fft_htField;   // y displacement
@@ -150,7 +152,7 @@ private:
 
     // array of pointers pointing to m_out* arrays
     // used with 'enum arrayType' and in getOceanData() and getOceanArray()
-    float *m_arrayPointer[8];
+    float *m_arrayPointer[9];
 
     // bool types for various checks during run-time
     bool    m_isAllocated;      // working arrays memory allocation check
