@@ -175,8 +175,6 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
     if (lockInputs(context) >= UT_ERROR_ABORT)
         return error();
 
-    pOcean = new aaOcean;
-   
     duplicateSource(0, context);
     setVariableOrder(3, 2, 0, 1);
     setCurGdh(0, myGdpHandle);
