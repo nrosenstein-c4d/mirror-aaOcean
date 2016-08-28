@@ -112,7 +112,7 @@ static PRM_Default      peakSharpeningDefault(1.0);
 static PRM_Range        fetchRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 1000.0);
 static PRM_Default      fetchDefault(20.0);
 
-static PRM_Range        swellRange(PRM_RANGE_RESTRICTED, -50.0, PRM_RANGE_UI, 50.f);
+static PRM_Range        swellRange(PRM_RANGE_RESTRICTED, 0.0, PRM_RANGE_UI, 1.f);
 static PRM_Default      swellDefault(0.0);
 
 PRM_Template aaOceanSOP::myTemplateList[] = 
@@ -280,7 +280,7 @@ OP_ERROR aaOceanSOP::cookMySop(OP_Context &context)
             pos.z() += pOcean->getOceanData(u, v, aaOcean::eCHOPZ);
         }
         
-        gdp->setPos3(pt_offset, pos);
+       gdp->setPos3(pt_offset, pos);
 
        if(enableEigens)
         {
