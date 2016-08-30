@@ -10,8 +10,9 @@
 class input
 {
 public:
-    int resolution;
-    int seed;
+    unsigned int resolution;
+    unsigned int spectrum;
+    unsigned int seed;
     float oceanScale;
     float oceanDepth;
     float surfaceTension;
@@ -41,6 +42,7 @@ public:
 input::input()
 {
     resolution      = 64;
+    spectrum        = 0;
     seed            = 1;
     oceanScale      = 100.f;
     oceanDepth      = 1000.f;
@@ -71,7 +73,7 @@ void input::help()
 }
 
 // define options and usage
-enum  optionIndex { UNKNOWN, HELP, RESOLUTION, SEED, OCEANSCALE, \
+enum  optionIndex { UNKNOWN, HELP, RESOLUTION, SPECTRUM, SEED, OCEANSCALE, \
     OCEANDEPTH, SURFACETENSION, VELOCITY, SMOOTH, \
     WINDDIRECTION, WINDALIGN, REFLECTEDWAVES, WAVESPEED, \
     WAVEHEIGHT, WAVECHOP, STARTFRAME, ENDFRAME, FPS, OUTPUTFOLDER, POSTFIX, LOGLEVEL};
@@ -80,6 +82,7 @@ const option::Descriptor usage[] =
 {
     {UNKNOWN, 0, "", "",                        option::Arg::None,     "\nUSAGE: aaOcean --help\n" },
     {RESOLUTION, 0,"res","resolution",          option::Arg::Optional, "  --resolution=<arg>  Defines map resolution in powers of two. \n  Examples: 64, 128, 256, 512, 1024, 2048, 4096\n  Default: 64\n" },
+    {SPECTRUM, 0,"spec","spectrum",             option::Arg::Optional, "  --spectrum=<arg>  Select which spectrum to run an FFT on. For Philips, use 0\n  Default: 0\n" },
     {SEED, 0,"seed","seed",                     option::Arg::Optional, "  --seed=<arg>  Seed for random number generator. \n  Different seeds produce different oceans\n  Default: 1\n" },
     {OCEANSCALE, 0,"scale","oceanscale",        option::Arg::Optional, "  --oceanscale=<arg>\n  Defines ocean size in meters.\n  Default: 100.0\n" },
     {OCEANDEPTH, 0,"depth","oceandepth",        option::Arg::Optional, "  --oceandepth=<arg>\n  Defines ocean depth in meters.\n  Default: 10000.0\n" },
@@ -158,7 +161,11 @@ bool processInput(int argc, char** argv, input &oceanInput)
                 LOG(logDEBUG) << msg;
                 exit(0);
             }
-
+        case SPECTRUM:
+            oceanInput.spectrum = atoi(opt.arg);
+            sprintf(msg, "--spectrum with argument '%s'\n", opt.arg);
+            LOG(logDEBUG) << msg;
+            break;
         case SEED:
             oceanInput.seed = atoi(opt.arg);
             sprintf(msg, "--seed with argument '%s'\n", opt.arg);
