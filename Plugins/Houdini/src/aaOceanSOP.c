@@ -94,6 +94,9 @@ static PRM_Default      seedDefault(1);
 static PRM_Range        velocityRange(PRM_RANGE_RESTRICTED, 0.0, PRM_RANGE_UI, 300.0);
 static PRM_Default      velocityDefault(4.0);
 
+static PRM_Range        waveSpeedRange(PRM_RANGE_UI, -10.0, PRM_RANGE_UI, 10.0);
+static PRM_Default      waveSpeedDefault(1.0);
+
 static PRM_Range        loopTimeRange(PRM_RANGE_RESTRICTED, 0.001, PRM_RANGE_UI, 1000.0);
 static PRM_Default      loopTimeDefault(1000.0);
 
@@ -121,14 +124,14 @@ PRM_Template aaOceanSOP::myTemplateList[] =
     PRM_Template(PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[17], 0, &spectrumNamesMenu),
     PRM_Template(PRM_FLT_J, 1, &names[2],  &oceanScaleDefault,  0, &oceanScaleRange),       // oceanScale   // 2
     PRM_Template(PRM_FLT_J, 1, &names[3],  &oceanDepthDefault,  0, &oceanDepthRange),       // oceanDepth   // 3
-    PRM_Template(PRM_FLT_J, 1, &names[4],  &surftDefault,   0, &surftRange),                // surfaceTension// 4
+    PRM_Template(PRM_FLT_J, 1, &names[4],  &surftDefault,       0, &surftRange),            // surfaceTension// 4
     PRM_Template(PRM_INT_E, 1, &names[1],  &seedDefault,        0, &seedRange),             // seed         // 1
     PRM_Template(PRM_FLT_J, 1, &names[14], PRMzeroDefaults,     0, &PRMscaleRange),         // timeOffset   // 14
     PRM_Template(PRM_FLT_J, 1, &names[15], &loopTimeDefault,    0, &loopTimeRange),         // loop time    // 15
 
     PRM_Template(PRM_FLT_J, 1, &names[11], PRMoneDefaults,      0, &PRMdivision0Range),     // waveHeight   // 11
     PRM_Template(PRM_FLT_J, 1, &names[5],  &velocityDefault,    0, &velocityRange),         // velocity (Wave Size) //5
-    PRM_Template(PRM_FLT_J, 1, &names[10], PRMoneDefaults,      0, &PRMdivision0Range),     // waveSpeed    // 10
+    PRM_Template(PRM_FLT_J, 1, &names[10], &waveSpeedDefault,   0, &waveSpeedRange),        // waveSpeed    // 10
     PRM_Template(PRM_FLT_J, 1, &names[12], PRMzeroDefaults,     0, &PRMrolloffRange),       // chop         // 12
     PRM_Template(PRM_FLT_J, 1, &names[6],  PRMzeroDefaults,     0, &PRMdivision0Range),     // cutoff (Wave Smooth) // 6
 
