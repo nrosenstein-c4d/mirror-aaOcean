@@ -32,6 +32,8 @@ public:
     int endFrame;
     float fps;
 
+    int accumulateFoam;
+
     int logLevel;
     char helpMsg[2048];
 
@@ -60,7 +62,8 @@ input::input()
     sprintf(postfix, "");
     startFrame      = 1;
     endFrame        = 1;
-    fps = 24;
+    fps             = 24;
+    accumulateFoam  = 0;
 
     logLevel = 0;
     help();
@@ -76,7 +79,7 @@ void input::help()
 enum  optionIndex { UNKNOWN, HELP, RESOLUTION, SPECTRUM, SEED, OCEANSCALE, \
     OCEANDEPTH, SURFACETENSION, VELOCITY, SMOOTH, \
     WINDDIRECTION, WINDALIGN, REFLECTEDWAVES, WAVESPEED, \
-    WAVEHEIGHT, WAVECHOP, STARTFRAME, ENDFRAME, FPS, OUTPUTFOLDER, POSTFIX, LOGLEVEL};
+    WAVEHEIGHT, WAVECHOP, STARTFRAME, ENDFRAME, FPS, ACCUMULATEFOAM, OUTPUTFOLDER, POSTFIX, LOGLEVEL};
 
 const option::Descriptor usage[] =
 {
@@ -98,6 +101,7 @@ const option::Descriptor usage[] =
     {STARTFRAME, 0,"start","startframe",        option::Arg::Optional, "  --startframe=<arg>\n  Start Frame for multi-frame output\n  Default: 1\n" },
     {ENDFRAME, 0,"end","endframe",              option::Arg::Optional, "  --endframe=<arg>\n  End Frame for multi-frame output\n  Default: 1\n" },
     {FPS, 0,"fps","fps",                        option::Arg::Optional, "  --fps=<arg>\n  Frames Per Second. Used to compute time increment\n  Default 24.0\n" },
+    {ACCUMULATEFOAM, 0,"accFoam","accFoam",     option::Arg::Optional, "  --accFoam=<arg>\n  Accumulates Foam over time\n  Default 0\n" },
     {OUTPUTFOLDER, 0,"o","outputfolder",        option::Arg::Optional, "  --outputfolder=<arg>\n  Folder to write OpenEXR sequences to\n" },
     {POSTFIX, 0,"pfix","postfix",               option::Arg::Optional, "  --postfix=<arg>\n  Postfix for output filename\n" },
     {LOGLEVEL, 0,"log","loglevel",              option::Arg::Optional, "  --loglevel=<arg>\n Set to 1 for added info about what aaOcean is doing" },
@@ -239,6 +243,11 @@ bool processInput(int argc, char** argv, input &oceanInput)
         case FPS:
             oceanInput.fps = (float)atof(opt.arg);
             sprintf(msg, "--fps with argument '%s'\n", opt.arg);
+            LOG(logDEBUG) << msg;
+            break;
+        case ACCUMULATEFOAM:
+            oceanInput.accumulateFoam = atoi(opt.arg);
+            sprintf(msg, "--accuFoam with argument '%s'\n", opt.arg);
             LOG(logDEBUG) << msg;
             break;
         case OUTPUTFOLDER:
