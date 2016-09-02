@@ -55,22 +55,22 @@ void writeFoam(float *&foam, input &oceanInput, int currentFrame)
     LOG(logINFO) << "written accumulated foam";
 }
 
-void accumulateFoam(aaOcean *&pOcean, float *&foamCurrent, float *&accumulatedFoam, input &oceanInput, int currentFrame)
+void accumulateFoam(aaOcean *&pOcean, float *&foamCurrentFrame, float *&accumulatedFoam, input &oceanInput, int currentFrame)
 {
     int size = oceanInput.resolution * oceanInput.resolution;
-    pOcean->getOceanArray(foamCurrent, aaOcean::eFOAM); // this overwrites foam
+    pOcean->getOceanArray(foamCurrentFrame, aaOcean::eFOAM); // this overwrites foam
 
     if (currentFrame > oceanInput.startFrame)
     {
         #pragma omp parallel for 
         for (int i = 0; i < size; ++i)
-            accumulatedFoam[i] = clamp(foamCurrent[i], 0.f, 100.f) + accumulatedFoam[i] * 0.9f;
+            accumulatedFoam[i] = clamp(foamCurrentFrame[i], 0.f, 100.f) + accumulatedFoam[i] * 0.9f;
     }
     else
     {
         #pragma omp parallel for 
         for (int i = 0; i < size; ++i)
-            accumulatedFoam[i] = clamp(foamCurrent[i], 0.f, 100.f);
+            accumulatedFoam[i] = clamp(foamCurrentFrame[i], 0.f, 100.f);
     }
 }
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     int dimension = oceanInput.resolution;
     LOG(logINFO) << "Starting ocean evaluation for " << dimension << "x" << dimension;
 
-    float *accuFoamCurrentFrame = 0;
+    float *foamCurrentFrame = 0;
     float *accumulatedFoam = 0;
 
     oceanInput.accumulateFoam = 1;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     if (oceanInput.accumulateFoam > 0)
     {
         int size = dimension * dimension * sizeof(float);
-        accuFoamCurrentFrame = (float*)malloc(size);
+        foamCurrentFrame = (float*)malloc(size);
         accumulatedFoam = (float*)malloc(size);
     }
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
                        currentFrame, 
                        &outputFileName[0]);
 
-        accumulateFoam(pOcean, accuFoamCurrentFrame, accumulatedFoam, oceanInput, currentFrame);
+        accumulateFoam(pOcean, foamCurrentFrame, accumulatedFoam, oceanInput, currentFrame);
         writeFoam(accumulatedFoam, oceanInput, currentFrame);
 
         sprintf(msg,"Written OpenEXR object-space vector-displacement map");
@@ -155,9 +155,9 @@ int main(int argc, char* argv[])
         currentFrame++;
     }
 
-    if (accuFoamCurrentFrame)
+    if (foamCurrentFrame)
     {
-        free(accuFoamCurrentFrame);
+        free(foamCurrentFrame);
         free(accumulatedFoam);
     }
     delete pOcean;
