@@ -88,8 +88,6 @@ int main(int argc, char* argv[])
     float *foamCurrentFrame = 0;
     float *accumulatedFoam = 0;
 
-    oceanInput.accumulateFoam = 1;
-
     if (oceanInput.accumulateFoam > 0)
     {
         int size = dimension * dimension * sizeof(float);
