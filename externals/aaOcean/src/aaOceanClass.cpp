@@ -698,8 +698,8 @@ void aaOcean::evaluateHokData()
         if (bDamp && (k_dot_w < 0.0f))
             m_fftSpectrum[index] *= (1.0f - m_damp);
 
-        m_hokReal[index] = (aa_INV_SQRTTWO) * (m_rand1[index]) * m_fftSpectrum[index];
-        m_hokImag[index] = (aa_INV_SQRTTWO) * (m_rand2[index]) * m_fftSpectrum[index];
+        m_hokReal[index] = aa_INV_SQRTTWO * m_rand1[index] * m_fftSpectrum[index];
+        m_hokImag[index] = aa_INV_SQRTTWO * m_rand2[index] * m_fftSpectrum[index];
     }
 
     sprintf(m_state, "\n[aaOcean Core] Finished initializing all ocean data");
