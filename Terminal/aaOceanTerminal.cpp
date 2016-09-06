@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
 {
     char msg[512];
     input oceanInput;
+    LOG(logINFO) << oceanInput.helpMsg;
 
     if(!processInput(argc, argv, oceanInput))
         return 1;

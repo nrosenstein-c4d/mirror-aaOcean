@@ -73,6 +73,9 @@ void input::help()
 {
     sprintf(helpMsg,"\naaOcean Terminal/Console Application. Amaan Akram -- amaan@amaanakram.com\n");
     sprintf(helpMsg, "%saaOcean is a Tessendorf vector displacement map generator\n\n", helpMsg);
+    sprintf(helpMsg, "%sexample usage:\n\n", helpMsg);
+    sprintf(helpMsg, "%saaOcean --resolution=512 --seed=5 --oceanscale=100 --velocity=15.1 --winddir=45 --windalign=1 \
+--reflectedwaves=1.0 --speed=1.1 --waveheight=3.0 --wavechop=2.0 --startframe=101 --endframe=150 --outputfolder=C:\\temp\n\n", helpMsg);
 }
 
 // define options and usage
