@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
 
         pOcean->input(
             dimension,                  // resolution 
-            oceanInput.seed,            // seed
             oceanInput.spectrum,        // spectrum
+            oceanInput.seed,            // seed
             oceanInput.oceanScale,      // ocean scale
             oceanInput.oceanDepth,      // ocean depth
             oceanInput.surfaceTension,  // surface tension
@@ -140,8 +140,11 @@ int main(int argc, char* argv[])
                        currentFrame, 
                        &outputFileName[0]);
 
-        accumulateFoam(pOcean, foamCurrentFrame, accumulatedFoam, oceanInput, currentFrame);
-        writeFoam(accumulatedFoam, oceanInput, currentFrame);
+        if (oceanInput.accumulateFoam > 0)
+        {
+            accumulateFoam(pOcean, foamCurrentFrame, accumulatedFoam, oceanInput, currentFrame);
+            writeFoam(accumulatedFoam, oceanInput, currentFrame);
+        }
 
         sprintf(msg,"Written OpenEXR object-space vector-displacement map");
         LOG(logDEBUG) << msg;
