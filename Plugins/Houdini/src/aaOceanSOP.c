@@ -58,15 +58,15 @@ static PRM_Name names[] =
     PRM_Name("oceanScale",      "Ocean Scale"),
     PRM_Name("oceanDepth",      "Ocean Depth"),
     PRM_Name("surfaceTension",  "Surface Tension"),
-    PRM_Name("velocity",        "Wave Size"),
+    PRM_Name("velocity",        "Wave Size/Wind Velocity"),
     PRM_Name("cutoff",          "Wave Smooth"),
     PRM_Name("windDir",         "Wind Dir"),
     PRM_Name("windAlign",       "Wind Align"),
-    PRM_Name("damp",            "Reflected Waves"),
+    PRM_Name("damp",            "Damp Reflected Waves"),
     PRM_Name("waveSpeed",       "Wave Speed"),
     PRM_Name("waveHeight",      "Wave Height"),
     PRM_Name("chop",            "Chop Amount"),
-    PRM_Name("enableEigens",    "Output Eigens Attributes"),
+    PRM_Name("enableEigens",    "Output Eigens & Spectrum Attributes"),
     PRM_Name("timeOffset",      "Time Offset"),
     PRM_Name("loopTime",        "Loop Time"),
     PRM_Name("uvAttribute",     "UV Attribute"),
@@ -118,34 +118,46 @@ static PRM_Default      fetchDefault(20.0);
 static PRM_Range        swellRange(PRM_RANGE_RESTRICTED, 0.0, PRM_RANGE_UI, 1.f);
 static PRM_Default      swellDefault(0.0);
 
+
+static PRM_Name		switcherName("oceanTabs");
+static PRM_Default	switcher[] = {
+    PRM_Default(3, "Wave Params"),	    
+    PRM_Default(4, "Wind Params"),	    
+    PRM_Default(3, "TMA-specific Params"),
+    PRM_Default(6, "Misc"),	    
+};
+
 PRM_Template aaOceanSOP::myTemplateList[] = 
 {   
-    PRM_Template(PRM_INT_E, 1, &names[0],  &resolutionDefault,  0, &resolutionRange),       // resolution   // 0
-    PRM_Template(PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[17], 0, &spectrumNamesMenu),
-    PRM_Template(PRM_FLT_J, 1, &names[2],  &oceanScaleDefault,  0, &oceanScaleRange),       // oceanScale   // 2
-    PRM_Template(PRM_FLT_J, 1, &names[3],  &oceanDepthDefault,  0, &oceanDepthRange),       // oceanDepth   // 3
-    PRM_Template(PRM_FLT_J, 1, &names[4],  &surftDefault,       0, &surftRange),            // surfaceTension// 4
-    PRM_Template(PRM_INT_E, 1, &names[1],  &seedDefault,        0, &seedRange),             // seed         // 1
-    PRM_Template(PRM_FLT_J, 1, &names[14], PRMzeroDefaults,     0, &PRMscaleRange),         // timeOffset   // 14
-    PRM_Template(PRM_FLT_J, 1, &names[15], &loopTimeDefault,    0, &loopTimeRange),         // loop time    // 15
+    PRM_Template(PRM_INT_E, 1, &names[0],  &resolutionDefault,  0, &resolutionRange),           // resolution   // 0
+    PRM_Template(PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[17], 0, &spectrumNamesMenu),  // spectrum type
+    PRM_Template(PRM_FLT_J, 1, &names[2],  &oceanScaleDefault,  0, &oceanScaleRange),           // oceanScale   // 2
+    PRM_Template(PRM_INT_E, 1, &names[1],  &seedDefault,        0, &seedRange),                 // seed         // 1
+    PRM_Template(PRM_FLT_J, 1, &names[14], PRMzeroDefaults,     0, &PRMscaleRange),             // timeOffset   // 14
+    PRM_Template(PRM_TOGGLE,1, &names[13]),                                                     // enable Foam  // 13
+
+    PRM_Template(PRM_SWITCHER,  sizeof(switcher) / sizeof(PRM_Default), &switcherName, switcher),
 
     PRM_Template(PRM_FLT_J, 1, &names[11], PRMoneDefaults,      0, &PRMdivision0Range),     // waveHeight   // 11
-    PRM_Template(PRM_FLT_J, 1, &names[5],  &velocityDefault,    0, &velocityRange),         // velocity (Wave Size) //5
     PRM_Template(PRM_FLT_J, 1, &names[10], &waveSpeedDefault,   0, &waveSpeedRange),        // waveSpeed    // 10
     PRM_Template(PRM_FLT_J, 1, &names[12], PRMzeroDefaults,     0, &PRMrolloffRange),       // chop         // 12
-    PRM_Template(PRM_FLT_J, 1, &names[6],  PRMzeroDefaults,     0, &PRMdivision0Range),     // cutoff (Wave Smooth) // 6
 
+    PRM_Template(PRM_FLT_J, 1, &names[5],  &velocityDefault,    0, &velocityRange),         // velocity (Wave Size) //5
     PRM_Template(PRM_FLT_J, 1, &names[7],  PRMzeroDefaults,     0, &PRMangleRange),         // windDir      // 7
     PRM_Template(PRM_FLT_J, 1, &names[9],  PRMzeroDefaults,     0, &PRMunitRange),          // damp         // 9
     PRM_Template(PRM_INT_E, 1, &names[8],  PRMzeroDefaults,     0, &PRMdivision0Range),     // windAlign    // 8
 
-    PRM_Template(PRM_TOGGLE,1, &names[13]),                                                 // enable Foam  // 13
-    PRM_Template(PRM_STRING,1, &names[16], 0),                                              // UV Attribute // 16
-
-    PRM_Template(PRM_FLT_J, 1, &names[18], &spectrumMultDefault, 0, &spectrumMultRange),    // spectrumMult // 18
     PRM_Template(PRM_FLT_J, 1, &names[19], &peakSharpeningDefault,0, &peakSharpeningRange), // peak sharpening// 19
     PRM_Template(PRM_FLT_J, 1, &names[20], &fetchDefault,        0, &fetchRange),           // fetch // 20
     PRM_Template(PRM_FLT_J, 1, &names[21], &swellDefault,        0, &swellRange),           // swell // 21
+
+    PRM_Template(PRM_FLT_J, 1, &names[3],  &oceanDepthDefault,  0, &oceanDepthRange),       // oceanDepth   // 3
+    PRM_Template(PRM_FLT_J, 1, &names[4],  &surftDefault,       0, &surftRange),            // surfaceTension// 4
+    PRM_Template(PRM_FLT_J, 1, &names[6],  PRMzeroDefaults,     0, &PRMdivision0Range),     // cutoff (Wave Smooth) // 6
+    PRM_Template(PRM_STRING,1, &names[16], 0),                                              // UV Attribute // 16
+    PRM_Template(PRM_FLT_J, 1, &names[15], &loopTimeDefault,    0, &loopTimeRange),         // loop time    // 15
+    PRM_Template(PRM_FLT_J, 1, &names[18], &spectrumMultDefault, 0, &spectrumMultRange),    // spectrumMult // 18
+
 
     PRM_Template(),
 };
