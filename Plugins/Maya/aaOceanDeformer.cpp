@@ -183,7 +183,9 @@ MStatus aaOceanDeformer::compute(const MPlug& plug, MDataBlock& block)
             foam,
             0.0f, // random weight
             block.inputValue(spectrumMult).asFloat(),
-            block.inputValue(pmWaveSize).asFloat());
+            block.inputValue(peakSharpening).asFloat(),
+            block.inputValue(jswpFetch).asFloat(),
+            block.inputValue(swell).asFloat());
 
 		//if no UVs on mesh, return
 		if(getUVs(mesh, block) == FALSE)

@@ -102,7 +102,9 @@ public:
     static  MObject  doFoam;
     static  MObject  invertFoam;
     static  MObject  spectrumMult;
-    static  MObject  pmWaveSize;
+    static  MObject  peakSharpening;
+    static  MObject  jswpFetch;
+    static  MObject  swell;
 
     static  MObject  uvMap;
     static  MObject  eigenVectorMap;
@@ -150,7 +152,9 @@ MObject     aaOceanDeformer::eigenVectorMap;
 MObject     aaOceanDeformer::eigenValueMap;
 MObject     aaOceanDeformer::inTransform;
 MObject     aaOceanDeformer::spectrumMult;
-MObject     aaOceanDeformer::pmWaveSize;
+MObject     aaOceanDeformer::peakSharpening;
+MObject     aaOceanDeformer::jswpFetch;
+MObject     aaOceanDeformer::swell;
 
 MTypeId     aaOceanDeformer::id(MAYA_NODE_ID); //Maya Node ID 548859700
 
@@ -188,14 +192,32 @@ MStatus aaOceanDeformer::initialize()
     addAttribute(spectrumMult);
     attributeAffects(aaOceanDeformer::spectrumMult, aaOceanDeformer::outputGeom);
 
-    MFnNumericAttribute nAttrPMWaveSize;
-    pmWaveSize = nAttrPMWaveSize.create("pmWaveSize", "pmWaveSize", MFnNumericData::kFloat, 1.f);
-    nAttrPMWaveSize.setKeyable(true);
-    nAttrPMWaveSize.setWritable(true);
-    nAttrPMWaveSize.setMin(1.f);
-    nAttrPMWaveSize.setMax(2.f);
-    addAttribute(pmWaveSize);
-    attributeAffects(aaOceanDeformer::pmWaveSize, aaOceanDeformer::outputGeom);
+    MFnNumericAttribute nAttrPeakSharpening;
+    peakSharpening = nAttrPeakSharpening.create("PeakSharpening", "peakSharpening", MFnNumericData::kFloat, 1.f);
+    nAttrPeakSharpening.setKeyable(true);
+    nAttrPeakSharpening.setWritable(true);
+    nAttrPeakSharpening.setMin(0.001f);
+    nAttrPeakSharpening.setMax(6.f);
+    addAttribute(peakSharpening);
+    attributeAffects(aaOceanDeformer::peakSharpening, aaOceanDeformer::outputGeom);
+
+    MFnNumericAttribute nAttrJswpFetch;
+    jswpFetch = nAttrPeakSharpening.create("FetchDistance", "fetchDistance", MFnNumericData::kFloat, 20.f);
+    nAttrJswpFetch.setKeyable(true);
+    nAttrJswpFetch.setWritable(true);
+    nAttrJswpFetch.setMin(0.001f);
+    nAttrJswpFetch.setMax(1000.f);
+    addAttribute(jswpFetch);
+    attributeAffects(aaOceanDeformer::jswpFetch, aaOceanDeformer::outputGeom);
+
+    MFnNumericAttribute nAttrSwell;
+    swell = nAttrPeakSharpening.create("Swell", "swell", MFnNumericData::kFloat, 0.f);
+    nAttrSwell.setKeyable(true);
+    nAttrSwell.setWritable(true);
+    nAttrSwell.setMin(0.0f);
+    nAttrSwell.setMax(1.0f);
+    addAttribute(swell);
+    attributeAffects(aaOceanDeformer::swell, aaOceanDeformer::outputGeom);
 
     MFnNumericAttribute nAttrOceanSize;
     oceanSize= nAttrOceanSize.create( "oceanSize", "oceanSize", MFnNumericData::kFloat, 100.f );
