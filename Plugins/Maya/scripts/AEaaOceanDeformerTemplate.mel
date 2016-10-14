@@ -39,7 +39,9 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
             editorTemplate -addControl "surfaceTension";
             editorTemplate -label "Spectrum Type" -addControl "spectrum";
             editorTemplate -label "Spectrum Multiplier" -addControl "spectrumMult";
-            editorTemplate -label "Pierson-Moskowitz Wave Size" -addControl "pmWaveSize";
+            editorTemplate -label "Peak Sharpening" -addControl "peakSharpening";
+			editorTemplate -label "Fetch Distance" -addControl "jswpFetch";
+			editorTemplate -label "Swell" -addControl "swell";
         editorTemplate -endLayout;
  
     editorTemplate -endLayout;
