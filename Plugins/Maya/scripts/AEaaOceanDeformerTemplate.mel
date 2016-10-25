@@ -5,6 +5,8 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
         editorTemplate -beginLayout "Ocean Parameters" -collapse 0;
             editorTemplate -addControl "resolution";
 			
+			editorTemplate -callCustom "aaOcean_Build" "aaOcean_Update" "spectrum";
+			
             editorTemplate -addControl "oceanSize";
             editorTemplate -addControl "seed";
             editorTemplate -label "Current Time (secs)" -addControl "time";
@@ -37,7 +39,6 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
         editorTemplate -beginLayout "Advanced Parameters" -collapse 1;
             editorTemplate -addControl "oceanDepth";
             editorTemplate -addControl "surfaceTension";
-            editorTemplate -label "Spectrum Type" -addControl "spectrum";
             editorTemplate -label "Spectrum Multiplier" -addControl "spectrumMult";
             editorTemplate -label "Peak Sharpening" -addControl "peakSharpening";
 			editorTemplate -label "Fetch Distance" -addControl "jswpFetch";
@@ -50,4 +51,21 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
  
     editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;
+}
+
+global proc aaOcean_Build(string $enumAttrName)
+{
+    attrEnumOptionMenuGrp
+        -label "Spectrum Type "
+        -attribute $enumAttrName
+        -enumeratedItem 0 "Philips"
+        -enumeratedItem 1 "Pierson-Moskowitz"
+        -enumeratedItem 2 "TMA"
+        SpectrumAttrOptionGrp;
+}
+
+global proc aaOcean_Update(string $enumAttrName)
+{
+    //Update the attrEnumOptionMenuGrp for the enumAttr
+    attrEnumOptionMenuGrp -e -attribute $enumAttrName SpectrumAttrOptionGrp;
 }
