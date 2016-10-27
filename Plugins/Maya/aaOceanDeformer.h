@@ -202,7 +202,7 @@ MStatus aaOceanDeformer::initialize()
     attributeAffects(aaOceanDeformer::peakSharpening, aaOceanDeformer::outputGeom);
 
     MFnNumericAttribute nAttrJswpFetch;
-    jswpFetch = nAttrPeakSharpening.create("FetchDistance", "fetchDistance", MFnNumericData::kFloat, 20.f);
+    jswpFetch = nAttrJswpFetch.create("jswpFetch", "jswpFetch", MFnNumericData::kFloat, 20.f);
     nAttrJswpFetch.setKeyable(true);
     nAttrJswpFetch.setWritable(true);
     nAttrJswpFetch.setMin(0.001f);

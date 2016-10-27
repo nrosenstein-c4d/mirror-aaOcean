@@ -6,13 +6,10 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
             editorTemplate -addControl "resolution";
 			
 			editorTemplate -callCustom "aaOcean_Build" "aaOcean_Update" "spectrum";
-			
             editorTemplate -addControl "oceanSize";
             editorTemplate -addControl "seed";
             editorTemplate -label "Current Time (secs)" -addControl "time";
-            editorTemplate -addControl "timeOffset";
-            editorTemplate -addControl "repeatTime";
-            editorTemplate -label "UV Map label" -addControl "uvMap";
+            editorTemplate -addControl "timeOffset (secs)";
         editorTemplate -endLayout;
 
         editorTemplate -beginLayout "Wave Parameters" -collapse 0;
@@ -42,7 +39,9 @@ global proc AEaaOceanDeformerTemplate( string $nodeName )
             editorTemplate -label "Spectrum Multiplier" -addControl "spectrumMult";
             editorTemplate -label "Peak Sharpening" -addControl "peakSharpening";
 			editorTemplate -label "Fetch Distance" -addControl "jswpFetch";
-			editorTemplate -label "Swell" -addControl "swell";
+			//editorTemplate -label "Swell" -addControl "swell";
+			editorTemplate -addControl "repeatTime";
+            editorTemplate -label "UV Map label" -addControl "uvMap";
         editorTemplate -endLayout;
  
     editorTemplate -endLayout;
